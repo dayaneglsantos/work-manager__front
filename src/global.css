@@ -1,0 +1,75 @@
+@import 'tailwindcss';
+@custom-variant dark (&:where(.dark, .dark *));
+
+body {
+  transition: background 0.2s linear;
+  height: 100vh;
+}
+
+.dark {
+  background: var(--color-dark-background);
+}
+
+.light {
+  background: var(--color-light-background);
+}
+
+@theme {
+  --color-dark-background: #07000d;
+  --color-light-background: #ededed;
+  --color-primary: #5a189a;
+  --color-primary-light: #9d4edd;
+  --color-primary-dark: #220340;
+  --color-secondary: #84a98c;
+  --color-secondary-light: #b9fbc0;
+  --color-secondary-dark: #2a9d8f;
+  --color-error: #e63946;
+}
+
+/* Calendário */
+.rdp-root {
+  max-width: 100% !important;
+  width: 400px !important;
+}
+
+.rdp-months {
+  max-width: 100% !important;
+  justify-content: center !important;
+}
+
+.rdp-day_button {
+  width: 50px !important;
+  height: 50px !important;
+}
+
+.rdp-selected,
+.rdp-caption_label {
+  color: var(--color-primary) !important;
+}
+
+.rdp-today {
+  color: var(--color-primary-light) !important;
+  font-weight: bold;
+  background-color: rgba(90, 24, 154, 0.04) !important;
+  border-radius: 50%;
+}
+
+.rdp-selected .rdp-day_button {
+  border: 1px solid var(--color-primary) !important;
+}
+
+.rdp-chevron {
+  fill: var(--color-primary) !important;
+}
+
+.rdp-button_next,
+.rdp-button_previous {
+  transition: all 0.2s ease-in-out !important;
+  padding: 8px;
+  border-radius: 50%;
+}
+
+.rdp-button_next:hover,
+.rdp-button_previous:hover {
+  background: var(--color-light-background);
+}

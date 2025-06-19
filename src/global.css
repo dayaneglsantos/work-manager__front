@@ -17,16 +17,52 @@ body {
 @theme {
   --color-dark-background: #07000d;
   --color-light-background: #ededed;
-  --color-primary: #5a189a;
-  --color-primary-light: #9d4edd;
-  --color-primary-dark: #220340;
+
+  --color-primary: #725cad;
+  --color-primary-light: #9b7ebd;
+  --color-primary-dark: #3b1e54;
+  --color-primary-hover: #5a3b80;
   --color-secondary: #84a98c;
   --color-secondary-light: #b9fbc0;
   --color-secondary-dark: #2a9d8f;
   --color-error: #e63946;
+
+  --animate-loader-circle: circleLoader 0.5s alternate infinite ease;
+  --animate-loader-shadow: loaderShadow 0.5s alternate infinite ease;
+
+  @keyframes circleLoader {
+    0% {
+      top: 55px;
+      height: 5px;
+      border-radius: 50px 50px 25px 25px;
+      transform: scale(1.7);
+    }
+    50% {
+      height: 20px;
+      border-radius: 50%;
+      transform: scale(1);
+    }
+    100% {
+      top: 0%;
+    }
+  }
+
+  @keyframes loaderShadow {
+    0% {
+      transform: scaleX(1.5);
+    }
+    40% {
+      transform: scaleX(1);
+      opacity: 0.7;
+    }
+    100% {
+      transform: scaleX(0.2);
+      opacity: 0.4;
+    }
+  }
 }
 
-/* Calendário */
+/* ========================== Calendário ========================== */
 .rdp-root {
   max-width: 100% !important;
   width: 400px !important;
@@ -72,4 +108,11 @@ body {
 .rdp-button_next:hover,
 .rdp-button_previous:hover {
   background: var(--color-light-background);
+}
+
+/* ========================== Carousel ========================== */
+
+.swiper-button-prev::after,
+.swiper-button-next::after {
+  font-size: 1.5rem !important;
 }

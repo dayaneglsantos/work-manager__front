@@ -3,10 +3,12 @@ import { useState } from 'react'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/style.css'
 import { ptBR } from 'date-fns/locale'
+import { formatDate } from 'date-fns'
 
 export default function Calendar() {
   const today = new Date()
   const [selectedDay, setSelectedDay] = useState<Date>(today)
+  console.log(formatDate(selectedDay, 'dd/MM/yyyy', { locale: ptBR }))
 
   return (
     <div>

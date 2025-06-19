@@ -3,17 +3,30 @@ import InputField from '@/components/InputField'
 import bgImage from '@/assets/images/login-bg.jpg' // Adjust the path as necessary
 import Button from '@/components/Button'
 import { useForm } from 'react-hook-form'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Modal from '@/components/Modal'
 
 import ForgotPassword from '@/screens/ForgotPassword'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Image from 'next/image'
+import { login } from '@/services/login/loginService'
+import toast, { Toaster } from 'react-hot-toast'
+import { LoginType } from '@/types/loginTypes'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function Login() {
   const [open, setOpen] = useState(false)
   const [forgotPasswordStep, setForgotPasswordStep] = useState(1)
+  const router = useRouter()
+  const { saveSession, session, loading } = useAuth()
+
+  useEffect(() => {
+    if (!loading && session) {
+      router.push('/')
+    }
+  }, [session, loading, router])
 
   const loginSchema = z.object({
     email: z.string().email('Email inválido').min(1, 'Campo obrigatório'),
@@ -38,15 +51,22 @@ export default function Login() {
     formState: { errors }
   } = methods
 
-  const login = () => {
-    console.log('Login')
-  }
-
-  const onSubmit = () => {
-    console.log('Submit')
-  }
-
   const formValues = watch()
+
+  const onSubmit = async (values: LoginType) => {
+    try {
+      const data = await login(values)
+      if (data) {
+        toast.success('Login realizado com sucesso!')
+        saveSession(data)
+        router.push('/')
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.error || 'Erro ao fazer login.'
+      toast.error(errorMessage)
+    }
+  }
 
   return (
     <>
@@ -93,6 +113,7 @@ export default function Login() {
           </span>
         </form>
       </div>
+      <Toaster />
       <Modal
         open={open}
         onClose={() => {

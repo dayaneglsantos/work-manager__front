@@ -1,3 +1,4 @@
+import { AuthProvider } from '@/contexts/AuthContext'
 import '@/global.css'
 import type { Metadata } from 'next'
 import { Imprima } from 'next/font/google'
@@ -21,7 +22,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-br" className={font.className} suppressHydrationWarning>
-      <body>{children}</body>
+      <AuthProvider>
+        <body>{children}</body>
+      </AuthProvider>
     </html>
   )
 }

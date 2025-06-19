@@ -35,7 +35,7 @@ export default function NotificationsModal({
       onClick={onClose}
     >
       <div
-        className={`shadow-lg ${open ? 'blobk' : 'hidden'} absolute top-13 right-2 max-w-96 rounded-lg bg-white dark:bg-primary-dark `}
+        className={`shadow-lg ${open ? 'blobk' : 'hidden'} absolute top-13 right-2 max-w-96 rounded-lg bg-white dark:bg-primary text-dark-background `}
       >
         <p className="p-3 pb-0 text-center font-bold">Notificações</p>
         {notifications.map((notification, index) => (

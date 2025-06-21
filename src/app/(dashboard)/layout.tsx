@@ -21,7 +21,7 @@ export default function CommonLayout({
       <Toaster />
       <ProtectRoute>
         <div className="flex min-h-screen text-foreground relative">
-          <main className="flex w-lvw h-lvh">
+          <main className="flex w-full h-full">
             <Navbar />
             <div className="flex-1 pl-16">
               <Header />

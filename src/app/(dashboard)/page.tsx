@@ -20,14 +20,13 @@ const tasksData = [
 export default function Home() {
   return (
     <>
-      <Card className="overflow-hidden mb-3 w-full">
-        <p className="text-center font-bold text-lg">Mural</p>
+      <Card className="mb-3  w-full">
         <Carousel />
       </Card>
       <div className="flex flex-wrap gap-3">
         {tasksData.map((item, index) => (
           <Card
-            className="flex items-center justify-around gap-3 flex-1 min-w-[250px] "
+            className="flex items-center justify-around gap-3 flex-1 min-w-[250px]"
             key={index}
           >
             <Image

@@ -9,6 +9,7 @@ import { ptBR } from 'date-fns/locale'
 import NotificationsModal from './NotificationsModal'
 import ThemeToggle from './ToggleTheme'
 import avatar from '@/assets/images/avatar.png'
+import Avatar from './Avatar'
 
 export default function Header() {
   const [open, setOpen] = useState(false)
@@ -36,11 +37,7 @@ export default function Header() {
             </span>
           </div>
 
-          <Image
-            src={avatar}
-            alt="Logo"
-            className="rounded-full h-10 w-10 shadow-[0_0_8px_1px] shadow-primary-light "
-          />
+          <Avatar src={avatar} />
         </div>
       </div>
       <NotificationsModal open={open} onClose={() => setOpen(!open)} />

@@ -14,10 +14,10 @@ export default function FiltersList({ list, setFilters }: FiltersListProps) {
       {list.map((item: FilterListType, index) => (
         <>
           {item.type === 'select' && (
-            <SelectField key={index} item={item} setFilters={setFilters} />
+            <SelectField key={1} item={item} setFilters={setFilters} />
           )}
           {item.type === 'search' && (
-            <SearchField key={index} item={item} setFilters={setFilters} />
+            <SearchField key={2} item={item} setFilters={setFilters} />
           )}
         </>
       ))}

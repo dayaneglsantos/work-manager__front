@@ -81,11 +81,11 @@ export default function SelectField({
         />
       </div>
       {open && (
-        <div className="absolute z-10 bg-gray-100 w-full max-h-[600px] overflow-y-auto">
+        <div className="absolute z-10 bg-gray-100 dark:bg-gray-800 w-full max-h-[600px] overflow-y-auto">
           {item?.options?.map((option: Option) => (
             <div
               key={option.value}
-              className="p-2 shadow-gray-400 hover:bg-gray-200 rounded-md"
+              className="p-2 shadow-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md cursor-pointer"
               onClick={() => handleSelect(option)}
             >
               {item?.multiple && (

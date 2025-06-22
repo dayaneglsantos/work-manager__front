@@ -17,7 +17,7 @@ export default function SearchField({
   return (
     <div
       style={{ width: item?.width || 300, height: item?.height || 40 }}
-      className={`flex items-center justify-between border-primary border rounded-md p-1.5 ${focused ? 'bg-gray-100' : ''} ${item?.style}`}
+      className={`flex items-center justify-between border-primary border rounded-md p-1.5 ${focused ? 'bg-gray-100 dark:bg-gray-800' : ''} ${item?.style}`}
     >
       <input
         type="text"

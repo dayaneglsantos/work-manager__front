@@ -7,26 +7,31 @@ interface BadgeProps {
   color?: 'info' | 'success' | 'warning' | 'default' | 'error'
   name: string
   fullWidth?: boolean
+  onClick?: () => void
+  className?: string
 }
 
 export default function Badge({
   size = 'sm',
   icon,
-  color = 'warning',
+  color = 'default',
   name,
-  fullWidth = false
+  fullWidth = false,
+  onClick,
+  className
 }: BadgeProps) {
   const colors = {
-    info: 'bg-info',
-    success: 'bg-success',
-    warning: 'bg-warning',
-    default: 'bg-neutral-400',
-    error: 'bg-error'
+    info: 'bg-info hover:bg-info-hover',
+    success: 'bg-success hover:bg-success-hover',
+    warning: 'bg-warning hover:bg-warning-hover',
+    default: 'bg-neutral-400 hover:bg-neutral-500',
+    error: 'bg-error hover:bg-error-hover'
   }
 
   return (
     <div
-      className={`flex items-center gap-1 ${colors[color] ?? colors.default} rounded-3xl p-1 px-2 text-${size} text-white dark:text-black justify-center ${fullWidth ? 'w-full' : 'w-fit'}`}
+      className={`flex items-center gap-1 ${colors[color] ?? colors.default} rounded-3xl p-1 px-2 text-${size} text-white justify-center ${fullWidth ? 'w-full' : 'w-fit'} ${className ?? ''}`}
+      onClick={onClick}
     >
       <span>{name}</span>
       {icon && (

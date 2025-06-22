@@ -2,7 +2,7 @@
 
 import Card from '@/components/Card'
 import FiltersList from '@/components/FiltersList'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import mock from '@/mocks/tasks.json'
 import { formatDate } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -16,7 +16,6 @@ import {
   faCaretRight,
   faEquals
 } from '@fortawesome/free-solid-svg-icons'
-import { late } from 'zod'
 
 interface FiltersType {
   name: string
@@ -25,6 +24,11 @@ interface FiltersType {
 
 export default function TasksPage() {
   const [filters, setFilters] = useState<FiltersType[]>([])
+  const [openStatusOptions, setOpenStatusOptions] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<number | null>(null)
+  const statusRef = useRef<HTMLTableCellElement>(null)
+
+  // ============= PAGINAÇÃO ==============
   const [page, setPage] = useState(1)
   const pagesPerGroup = 5
   const totalTasks = 147
@@ -51,18 +55,21 @@ export default function TasksPage() {
     }
   }
 
-  const list = [
+  const statusList = [
+    { label: 'A Fazer', value: 'todo', color: 'default' },
+    { label: 'Em Progresso', value: 'inProgress', color: 'info' },
+    { label: 'Pausada', value: 'paused', color: 'warning' },
+    { label: 'Concluída', value: 'done', color: 'success' }
+  ]
+
+  const filtersList = [
     { type: 'search', name: 'task name', placeholder: 'Pesquisar tarefa' },
     {
       type: 'select',
       multiple: true,
       name: 'status',
       placeholder: 'Status',
-      options: [
-        { label: 'Pendente', value: 'pending' },
-        { label: 'Em progresso', value: 'in_progress' },
-        { label: 'Concluída', value: 'completed' }
-      ]
+      options: statusList
     }
   ]
 
@@ -107,9 +114,28 @@ export default function TasksPage() {
     return taskDate < today
   }
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        statusRef.current &&
+        !statusRef.current.contains(event.target as Node) // Verifica se o clique foi fora do statusRef
+      ) {
+        setOpenStatusOptions(false)
+      }
+    }
+
+    document.addEventListener('mouseup', handleClickOutside)
+
+    return () => {
+      document.removeEventListener('mouseup', handleClickOutside)
+    }
+  }, [])
+
+  console.log(openStatusOptions)
+
   return (
     <Card className="w-full">
-      <FiltersList list={list} setFilters={setFilters} />
+      <FiltersList list={filtersList} setFilters={setFilters} />
       <div>
         <table className="w-full table-auto max-w-full mt-4 border-separate border-spacing-2">
           <thead>
@@ -118,8 +144,8 @@ export default function TasksPage() {
               <th className="px-2 max-w-[180px]">Responsável</th>
               <th className="px-2 max-w-[300px]">Nome da tarefa</th>
               <th className="px-2">Data limite</th>
-              <th className="px-2">Prioridade</th>
-              <th className="px-2 max-w-[100px]">Status</th>
+              <th className="px-2 w-[90px]">Prioridade</th>
+              <th className="px-2 w-[130px]">Status</th>
             </tr>
           </thead>
           <tbody>
@@ -142,7 +168,7 @@ export default function TasksPage() {
                 >
                   {formatDate(task.deadline, 'dd/MM/yyyy', { locale: ptBR })}
                 </td>
-                <td className="px-2 text-center">
+                <td className="px-2 text-center w-[90px]">
                   <FontAwesomeIcon
                     icon={
                       task.priority === 'high'
@@ -154,12 +180,38 @@ export default function TasksPage() {
                     className={`${task.priority === 'high' ? 'text-red-600' : task.priority === 'medium' ? 'text-gray-600' : 'text-cyan-400'}`}
                   />
                 </td>
-                <td className="px-2 max-w-[100px]">
-                  <Badge
-                    name={statusFormat(task.status)?.label}
-                    color={statusFormat(task.status)?.color}
-                    fullWidth
-                  />
+                <td className="px-2 w-[130px]">
+                  <div className="relative" ref={statusRef}>
+                    <Badge
+                      name={statusFormat(task.status)?.label}
+                      color={statusFormat(task.status)?.color}
+                      fullWidth
+                      onClick={() => {
+                        setSelectedTask((prev) =>
+                          prev === task.id ? null : task.id
+                        )
+                        setOpenStatusOptions(
+                          (prev) => selectedTask !== task.id || !prev
+                        )
+                      }}
+                      className="cursor-pointer"
+                    />
+                    {openStatusOptions && selectedTask === task.id && (
+                      <div className="absolute left-0 z-10 w-full flex flex-col mt-1 gap-1 p-1 bg-gray-300 dark:bg-gray-700 rounded-md ">
+                        {statusList
+                          .filter((item) => item.value !== task.status)
+                          .map((i) => (
+                            <Badge
+                              key={i.value}
+                              name={i.label}
+                              color={i.color as any}
+                              fullWidth
+                              className="cursor-pointer block"
+                            />
+                          ))}
+                      </div>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

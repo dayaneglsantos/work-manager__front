@@ -26,9 +26,13 @@ body {
   --color-secondary-light: #b9fbc0;
   --color-secondary-dark: #2a9d8f;
   --color-warning: var(--color-orange-600);
+  --color-warning-hover: var(--color-orange-700);
   --color-error: var(--color-red-800);
+  --color-error-hover: var(--color-red-900);
   --color-success: var(--color-green-600);
+  --color-success-hover: var(--color-green-700);
   --color-info: var(--color-cyan-600);
+  --color-info-hover: var(--color-cyan-700);
 
   --animate-loader-circle: circleLoader 0.5s alternate infinite ease;
   --animate-loader-shadow: loaderShadow 0.5s alternate infinite ease;

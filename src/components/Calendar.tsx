@@ -20,6 +20,12 @@ export default function Calendar() {
         className="text-sm"
         locale={ptBR}
         required
+        styles={{
+          day_button: {
+            width: '50px',
+            height: '50px'
+          }
+        }}
       />
       <div className="flex flex-col gap-2 pt-4 border-t border-t-gray-300/50 text-sm max-w-[400px]">
         <span>- aniversário de joaozinho</span>

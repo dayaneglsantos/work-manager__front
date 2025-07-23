@@ -10,16 +10,22 @@ interface FiltersListProps {
 
 export default function FiltersList({ list, setFilters }: FiltersListProps) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 ">
       {list.map((item: FilterListType, index) => (
-        <>
+        <div key={index}>
           {item.type === 'select' && (
-            <SelectField key={1} item={item} setFilters={setFilters} />
+            <SelectField
+              options={item.options ?? []}
+              filter
+              setFilters={setFilters}
+              multiple={item.multiple}
+              name={item.name}
+            />
           )}
           {item.type === 'search' && (
-            <SearchField key={2} item={item} setFilters={setFilters} />
+            <SearchField item={item} setFilters={setFilters} />
           )}
-        </>
+        </div>
       ))}
     </div>
   )

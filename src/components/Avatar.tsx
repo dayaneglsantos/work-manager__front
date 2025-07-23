@@ -8,13 +8,22 @@ interface AvatarProps {
 }
 
 export default function Avatar({ size = 'md', src, className }: AvatarProps) {
+  const sizeClasses = {
+    sm: 'w-8 h-8',
+    md: 'w-10 h-10',
+    lg: 'w-12 h-12'
+  }
+
   return (
-    <Image
-      src={src || defaultAvatar.src}
-      alt="Avatar"
-      className={`rounded-full ${className ?? ''}`}
-      width={size === 'sm' ? 32 : size === 'md' ? 40 : 48}
-      height={size === 'sm' ? 32 : size === 'md' ? 40 : 48}
-    />
+    <div
+      className={`${sizeClasses[size]} ${className || ''} relative rounded-full overflow-hidden`}
+    >
+      <Image
+        src={src || defaultAvatar.src}
+        alt="Avatar"
+        className={`object-cover`}
+        fill
+      />
+    </div>
   )
 }

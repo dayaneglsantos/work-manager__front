@@ -5,16 +5,22 @@ interface ModalProps {
   open: boolean
   onClose: () => void
   children: React.ReactNode
+  className?: string
 }
 
-export default function Modal({ open, onClose, children }: ModalProps) {
+export default function Modal({
+  open,
+  onClose,
+  children,
+  className
+}: ModalProps) {
   return (
     <div
       className={` fixed z-50 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-screen w-screen bg-black/40 ${open ? 'block' : 'hidden'} flex items-center justify-center`}
       onClick={onClose}
     >
       <div
-        className={`bg-gray-100 fixed md:w-6/12 h-10/12 rounded-2xl p-3`}
+        className={`bg-gray-100 dark:bg-[#181C14] fixed md:w-6/12 h-10/12 rounded-2xl p-3 ${className}`}
         onClick={(e) => {
           e.stopPropagation()
         }}

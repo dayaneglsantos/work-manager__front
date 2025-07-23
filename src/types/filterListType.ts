@@ -11,5 +11,6 @@ export interface FilterListType {
   width?: number
   height?: number
   multiple?: boolean
-  style?: string
+  className?: string
+  value?: string | string[] | number | number[]
 }

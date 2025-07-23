@@ -8,11 +8,12 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import NotificationsModal from './NotificationsModal'
 import ThemeToggle from './ToggleTheme'
-import avatar from '@/assets/images/avatar.png'
 import Avatar from './Avatar'
+import { getSession } from '@/utils/getSession'
 
 export default function Header() {
   const [open, setOpen] = useState(false)
+  const session = getSession()
 
   const currentDate = new Date()
 
@@ -37,7 +38,7 @@ export default function Header() {
             </span>
           </div>
 
-          <Avatar src={avatar} />
+          <Avatar src={session?.profileImage} />
         </div>
       </div>
       <NotificationsModal open={open} onClose={() => setOpen(!open)} />

@@ -2,20 +2,23 @@
 
 import Card from '@/components/Card'
 import FiltersList from '@/components/FiltersList'
-import { useEffect, useRef, useState } from 'react'
-import mock from '@/mocks/tasks.json'
+import { useEffect, useState } from 'react'
 import { formatDate } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import Badge from '@/components/Badge'
 import Avatar from '@/components/Avatar'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faAnglesDown,
   faAnglesUp,
-  faCaretLeft,
-  faCaretRight,
-  faEquals
+  faEquals,
+  faFolderOpen
 } from '@fortawesome/free-solid-svg-icons'
+import toast from 'react-hot-toast'
+import { getTasks } from '@/services/task/taskServices'
+import { TasksMetaType, TaskType } from '@/types/taskType'
+import StatusSelector from '@/components/StatusSelector'
+import Pagination from '@/components/Pagination'
+import TaskDetailsModal from './DetailsModal'
 
 interface FiltersType {
   name: string
@@ -23,37 +26,10 @@ interface FiltersType {
 }
 
 export default function TasksPage() {
+  const [tasks, setTasks] = useState<TaskType[]>([])
+  const [tasksMeta, setTasksMeta] = useState<TasksMetaType | null>(null)
   const [filters, setFilters] = useState<FiltersType[]>([])
-  const [openStatusOptions, setOpenStatusOptions] = useState(false)
-  const [selectedTask, setSelectedTask] = useState<number | null>(null)
-  const statusRef = useRef<HTMLTableCellElement>(null)
-
-  // ============= PAGINAÇÃO ==============
-  const [page, setPage] = useState(1)
-  const pagesPerGroup = 5
-  const totalTasks = 147
-  const totalPages = Math.ceil(totalTasks / 10) // Math.ceil arredondar para cima.
-  const [groupStart, setGroupStart] = useState(1) // Qual página o grupo atual começa
-
-  // Calcula as páginas do grupo atual
-  const currentGroup = Array.from(
-    { length: Math.min(pagesPerGroup, totalPages - groupStart + 1) },
-    (_, i) => groupStart + i
-  )
-
-  const handlePrevGroup = () => {
-    if (groupStart > 1) {
-      setGroupStart(groupStart - pagesPerGroup)
-      setPage(groupStart - pagesPerGroup > 0 ? groupStart - pagesPerGroup : 1)
-    }
-  }
-
-  const handleNextGroup = () => {
-    if (groupStart + pagesPerGroup <= totalPages) {
-      setGroupStart(groupStart + pagesPerGroup)
-      setPage(groupStart + pagesPerGroup)
-    }
-  }
+  const [selectedTask, setSelectedTask] = useState<TaskType | null>(null)
 
   const statusList = [
     { label: 'A Fazer', value: 'todo', color: 'default' },
@@ -63,7 +39,7 @@ export default function TasksPage() {
   ]
 
   const filtersList = [
-    { type: 'search', name: 'task name', placeholder: 'Pesquisar tarefa' },
+    { type: 'search', name: 'search', placeholder: 'Pesquisar tarefa' },
     {
       type: 'select',
       multiple: true,
@@ -73,41 +49,22 @@ export default function TasksPage() {
     }
   ]
 
-  const statusFormat = (
-    status: string
-  ): {
-    label: string
-    color: 'info' | 'success' | 'warning' | 'default' | 'error'
-  } => {
-    switch (status) {
-      case 'paused':
-        return {
-          label: 'Pausada',
-          color: 'warning'
-        }
-      case 'inProgress':
-        return {
-          label: 'Em progresso',
-          color: 'info'
-        }
-      case 'done':
-        return {
-          label: 'Concluída',
-          color: 'success'
-        }
-      case 'todo':
-        return {
-          label: 'A Fazer',
-          color: 'default'
-        }
-      default:
-        return {
-          label: 'Desconhecido',
-          color: 'default'
-        }
+  const getTasksList = async (
+    page: number = 1,
+    status: string = '',
+    search: string = ''
+  ) => {
+    try {
+      const { data, meta } = await getTasks({ page, status, search })
+      setTasks(data)
+      setTasksMeta(meta)
+    } catch (error) {
+      console.error(error)
+      toast.error('Erro ao buscar tarefas')
     }
   }
 
+  // Verifica se a tarefa está atrasada
   const lateTask = (deadline: string) => {
     const today = new Date()
     const taskDate = new Date(deadline)
@@ -115,139 +72,111 @@ export default function TasksPage() {
   }
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        statusRef.current &&
-        !statusRef.current.contains(event.target as Node) // Verifica se o clique foi fora do statusRef
-      ) {
-        setOpenStatusOptions(false)
-      }
-    }
-
-    document.addEventListener('mouseup', handleClickOutside)
-
-    return () => {
-      document.removeEventListener('mouseup', handleClickOutside)
-    }
+    getTasksList()
   }, [])
 
-  console.log(openStatusOptions)
+  useEffect(() => {
+    let statusValue = ''
+    let searchValue = ''
+    if (filters.some((filter) => filter.name === 'status')) {
+      const statusFilter = filters.find((filter) => filter.name === 'status')
+      statusValue = Array.isArray(statusFilter?.value)
+        ? statusFilter.value.join(',')
+        : statusFilter?.value || ''
+    }
+    if (filters.some((filter) => filter.name === 'search')) {
+      const searchFilter = filters.find((filter) => filter.name === 'search')
+      searchValue = (searchFilter?.value as string) || ''
+    }
+    getTasksList(1, statusValue, searchValue)
+  }, [filters])
 
   return (
-    <Card className="w-full">
-      <FiltersList list={filtersList} setFilters={setFilters} />
-      <div>
-        <table className="w-full table-auto max-w-full mt-4 border-separate border-spacing-2">
-          <thead>
-            <tr>
-              <th className="px-2">Id</th>
-              <th className="px-2 max-w-[180px]">Responsável</th>
-              <th className="px-2 max-w-[300px]">Nome da tarefa</th>
-              <th className="px-2">Data limite</th>
-              <th className="px-2 w-[90px]">Prioridade</th>
-              <th className="px-2 w-[130px]">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {mock.map((task) => (
-              <tr key={task.id}>
-                <td className="px-2">{task.id}</td>
-                <td className="px-2 max-w-[180px]" title={task.assignee.name}>
-                  <div className="flex items-center gap-2">
-                    <Avatar src={task.assignee.profileImage} size="sm" />
-                    <span className="overflow-ellipsis whitespace-nowrap overflow-hidden">
-                      {task?.assignee?.name ?? ''}
-                    </span>
-                  </div>
-                </td>
-                <td title={task.title} className="px-2 max-w-[300px]">
-                  <span className="truncate block">{task.title}</span>
-                </td>
-                <td
-                  className={`px-2 text-center ${lateTask(task.deadline) ? 'text-red-800' : ''}`}
-                >
-                  {formatDate(task.deadline, 'dd/MM/yyyy', { locale: ptBR })}
-                </td>
-                <td className="px-2 text-center w-[90px]">
-                  <FontAwesomeIcon
-                    icon={
-                      task.priority === 'high'
-                        ? faAnglesUp
-                        : task.priority === 'medium'
-                          ? faEquals
-                          : faAnglesDown
-                    }
-                    className={`${task.priority === 'high' ? 'text-red-600' : task.priority === 'medium' ? 'text-gray-600' : 'text-cyan-400'}`}
-                  />
-                </td>
-                <td className="px-2 w-[130px]">
-                  <div className="relative" ref={statusRef}>
-                    <Badge
-                      name={statusFormat(task.status)?.label}
-                      color={statusFormat(task.status)?.color}
-                      fullWidth
-                      onClick={() => {
-                        setSelectedTask((prev) =>
-                          prev === task.id ? null : task.id
-                        )
-                        setOpenStatusOptions(
-                          (prev) => selectedTask !== task.id || !prev
-                        )
-                      }}
-                      className="cursor-pointer"
-                    />
-                    {openStatusOptions && selectedTask === task.id && (
-                      <div className="absolute left-0 z-10 w-full flex flex-col mt-1 gap-1 p-1 bg-gray-300 dark:bg-gray-700 rounded-md ">
-                        {statusList
-                          .filter((item) => item.value !== task.status)
-                          .map((i) => (
-                            <Badge
-                              key={i.value}
-                              name={i.label}
-                              color={i.color as any}
-                              fullWidth
-                              className="cursor-pointer block"
-                            />
-                          ))}
-                      </div>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className="w-48 mt-4 flex m-auto gap-2 items-center justify-center">
-          <FontAwesomeIcon
-            icon={faCaretLeft}
-            className={`transition-transform duration-200 text-2xl ${
-              groupStart === 1
-                ? 'opacity-30 cursor-default'
-                : 'hover:scale-125 cursor-pointer'
-            }`}
-            onClick={handlePrevGroup}
-          />
-          {currentGroup.map((pg) => (
-            <span
-              key={pg}
-              onClick={() => setPage(pg)}
-              className={`text-center block w-6 h-6 rounded-full cursor-pointer ${page === pg ? 'bg-primary hover:bg-primary text-white' : 'bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 hover:dark:bg-gray-500'}`}
-            >
-              {pg}
-            </span>
-          ))}
+    <>
+      <Card className="w-full">
+        <FiltersList list={filtersList} setFilters={setFilters} />
 
-          <FontAwesomeIcon
-            icon={faCaretRight}
-            className={`transition-transform duration-200 text-2xl ${
-              groupStart + pagesPerGroup > totalPages
-                ? 'opacity-30 cursor-default'
-                : 'hover:scale-125 cursor-pointer'
-            }`}
-            onClick={handleNextGroup}
-          />
+        <div>
+          <table className="w-full table-auto max-w-full mt-4 border-separate border-spacing-y-2 ">
+            <thead>
+              <tr>
+                <th className="px-2">Id</th>
+                <th className="px-2 max-w-[180px]">Responsável</th>
+                <th className="px-2 max-w-[300px]">Nome da tarefa</th>
+                <th className="px-2">Data limite</th>
+                <th className="px-2 w-[90px]">Prioridade</th>
+                <th className="px-2 w-[130px]">Status</th>
+                <th className="px-2 w-[110px]">Ver detalhes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tasks.map((task) => (
+                <tr
+                  key={task.id}
+                  className="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 cursor-pointer"
+                  onClick={() => setSelectedTask(task)}
+                >
+                  <td className="px-2 rounded-l-md">{task.id}</td>
+                  <td
+                    className="px-2 max-w-[180px] py-1"
+                    title={task.assignee.name}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Avatar src={task.assignee.profileImage} size="sm" />
+                      <span className="overflow-ellipsis whitespace-nowrap overflow-hidden">
+                        {task?.assignee?.name ?? ''}
+                      </span>
+                    </div>
+                  </td>
+                  <td title={task.title} className="px-2 max-w-[300px]">
+                    <span className="truncate block">{task.title}</span>
+                  </td>
+                  <td
+                    className={`px-2 text-center ${task.deadline ? lateTask(task.deadline) && 'text-red-800' : ''}`}
+                  >
+                    {task.deadline
+                      ? formatDate(task.deadline, 'dd/MM/yyyy', {
+                          locale: ptBR
+                        })
+                      : '--'}
+                  </td>
+                  <td className="px-2 text-center w-[90px]">
+                    <FontAwesomeIcon
+                      icon={
+                        task.priority === 'high'
+                          ? faAnglesUp
+                          : task.priority === 'medium'
+                            ? faEquals
+                            : faAnglesDown
+                      }
+                      className={`${task.priority === 'high' ? 'text-red-600' : task.priority === 'medium' ? 'text-gray-600' : 'text-cyan-400'}`}
+                    />
+                  </td>
+                  <td className="px-2 w-[130px] ">
+                    <StatusSelector task={task} statusList={statusList} />
+                  </td>
+                  <td className="rounded-r-md text-center p-1">
+                    <FontAwesomeIcon
+                      icon={faFolderOpen}
+                      className="bg-gray-300 p-1.5 rounded-full text-gray-800 hover:bg-gray-400 transition-colors duration-200"
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {tasksMeta && (
+            <Pagination metaData={tasksMeta} updateList={getTasksList} />
+          )}
         </div>
-      </div>
-    </Card>
+      </Card>
+      {selectedTask && (
+        <TaskDetailsModal
+          open={true}
+          onClose={() => setSelectedTask(null)}
+          task={selectedTask}
+        />
+      )}
+    </>
   )
 }

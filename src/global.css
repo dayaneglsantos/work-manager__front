@@ -70,7 +70,7 @@ body {
 }
 
 /* ========================== Calendário ========================== */
-.rdp-root {
+/* .rdp-root {
   max-width: 100% !important;
   width: 400px !important;
 }
@@ -78,12 +78,7 @@ body {
 .rdp-months {
   max-width: 100% !important;
   justify-content: center !important;
-}
-
-.rdp-day_button {
-  width: 50px !important;
-  height: 50px !important;
-}
+} */
 
 .rdp-selected,
 .rdp-caption_label {

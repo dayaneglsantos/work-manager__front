@@ -3,20 +3,24 @@
 import { FilterListType } from '@/types/filterListType'
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 export default function SearchField({
   item,
-  setFilters
+  setFilters,
+  setFiltersApplied
 }: {
   item: FilterListType
   setFilters: React.Dispatch<React.SetStateAction<any>>
+  setFiltersApplied: React.Dispatch<React.SetStateAction<boolean>>
 }) {
   const [focused, setFocused] = useState(false)
   const [debouncedValue, setDebouncedValue] = useState('')
 
   const handleChange = (value: string) => {
     setDebouncedValue(value)
+
+    setFiltersApplied(true)
   }
 
   useEffect(() => {

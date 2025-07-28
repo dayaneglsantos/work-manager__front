@@ -6,9 +6,14 @@ import React from 'react'
 interface FiltersListProps {
   list: FilterListType[]
   setFilters: React.Dispatch<React.SetStateAction<any>>
+  setFiltersApplied: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-export default function FiltersList({ list, setFilters }: FiltersListProps) {
+export default function FiltersList({
+  list,
+  setFilters,
+  setFiltersApplied
+}: FiltersListProps) {
   return (
     <div className="flex items-center gap-2 ">
       {list.map((item: FilterListType, index) => (
@@ -20,10 +25,17 @@ export default function FiltersList({ list, setFilters }: FiltersListProps) {
               setFilters={setFilters}
               multiple={item.multiple}
               name={item.name}
+              placeholder={item.placeholder}
+              value={item.value}
+              setFiltersApplied={setFiltersApplied}
             />
           )}
           {item.type === 'search' && (
-            <SearchField item={item} setFilters={setFilters} />
+            <SearchField
+              item={item}
+              setFilters={setFilters}
+              setFiltersApplied={setFiltersApplied}
+            />
           )}
         </div>
       ))}

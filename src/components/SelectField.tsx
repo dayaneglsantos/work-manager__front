@@ -22,6 +22,7 @@ export interface SelectFieldProps {
   className?: string
   width?: number
   height?: number
+  setFiltersApplied: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export default function SelectField({
@@ -35,7 +36,8 @@ export default function SelectField({
   name,
   className,
   width,
-  height
+  height,
+  setFiltersApplied
 }: SelectFieldProps) {
   const [open, setOpen] = useState(false)
   const [selectedList, setSelectedList] = useState<Option[]>([])
@@ -54,6 +56,7 @@ export default function SelectField({
       setSelectedList([selected])
       setOpen(false)
     }
+    setFiltersApplied(true)
   }
 
   useEffect(() => {
@@ -74,7 +77,7 @@ export default function SelectField({
           : selectedList[0]?.value
       )
     }
-  }, [selectedList, multiple, name, filter])
+  }, [selectedList])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

@@ -1,7 +1,8 @@
 import { TasksMetaType } from '@/types/taskType'
 import { faCaretLeft, faCaretRight } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useEffect, useState } from 'react'
+import { set } from 'date-fns'
+import { useEffect, useRef, useState } from 'react'
 
 interface PaginationProps {
   metaData: TasksMetaType
@@ -12,8 +13,6 @@ export default function Pagination({ metaData, updateList }: PaginationProps) {
   // ============= PAGINAÇÃO ==============
   const [page, setPage] = useState(metaData.page)
   const pagesPerGroup = 5
-  // const totalTasks = metaData.totalCount
-  // const totalPages = Math.ceil(totalTasks / 10) // Math.ceil arredondar para cima.
   const [groupStart, setGroupStart] = useState(1) // Qual página o grupo atual começa
 
   // Calcula as páginas do grupo atual
@@ -23,22 +22,26 @@ export default function Pagination({ metaData, updateList }: PaginationProps) {
   )
 
   const handlePrevGroup = () => {
+    const prevStart = groupStart - pagesPerGroup
     if (groupStart > 1) {
-      setGroupStart(groupStart - pagesPerGroup)
-      setPage(groupStart - pagesPerGroup > 0 ? groupStart - pagesPerGroup : 1)
+      setGroupStart(prevStart > 0 ? prevStart : 1)
+      setPage(prevStart > 0 ? prevStart : 1)
     }
   }
 
   const handleNextGroup = () => {
-    if (groupStart + pagesPerGroup <= metaData.totalPages) {
-      setGroupStart(groupStart + pagesPerGroup)
-      setPage(groupStart + pagesPerGroup)
+    const nextStart = groupStart + pagesPerGroup
+
+    if (nextStart <= metaData.totalPages) {
+      setGroupStart(nextStart)
+      setPage(nextStart)
     }
   }
 
-  useEffect(() => {
-    updateList(page)
-  }, [page])
+  const handleChangePage = (newPage: number) => {
+    setPage(newPage)
+    updateList(newPage)
+  }
 
   return (
     <div className="w-48 mt-4 flex m-auto gap-2 items-center justify-center">
@@ -54,7 +57,7 @@ export default function Pagination({ metaData, updateList }: PaginationProps) {
       {currentGroup.map((pg) => (
         <span
           key={pg}
-          onClick={() => setPage(pg)}
+          onClick={() => handleChangePage(pg)}
           className={`text-center block w-6 h-6 rounded-full cursor-pointer ${page === pg ? 'bg-primary hover:bg-primary text-white' : 'bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 hover:dark:bg-gray-500'}`}
         >
           {pg}

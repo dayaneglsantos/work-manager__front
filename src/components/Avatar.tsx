@@ -1,5 +1,5 @@
 import Image, { StaticImageData } from 'next/image'
-import defaultAvatar from '@/assets/images/default-avatar.png'
+import defaultAvatar from '@/assets/images/default-avatar.svg'
 
 interface AvatarProps {
   size?: 'sm' | 'md' | 'lg'

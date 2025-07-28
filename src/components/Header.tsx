@@ -13,15 +13,15 @@ import { getSession } from '@/utils/getSession'
 
 export default function Header() {
   const [open, setOpen] = useState(false)
-  const session = getSession()
+  const user = getSession()
 
   const currentDate = new Date()
 
   return (
     <>
       <div className="h-16 p-2 pr-6 flex  items-center justify-between">
-        <span className="font-bold md:ml-6">
-          Olá Dayane, hoje é{' '}
+        <span className="font-bold ml-12">
+          Olá {user?.name}, hoje é{' '}
           {format(currentDate, " EEEE, 'dia' dd 'de' MMMM 'de' yyyy", {
             locale: ptBR
           })}
@@ -38,7 +38,7 @@ export default function Header() {
             </span>
           </div>
 
-          <Avatar src={session?.profileImage} />
+          <Avatar src={null} />
         </div>
       </div>
       <NotificationsModal open={open} onClose={() => setOpen(!open)} />

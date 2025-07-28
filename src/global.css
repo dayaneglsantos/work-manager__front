@@ -118,3 +118,15 @@ body {
 .swiper-button-next::after {
   font-size: 1.5rem !important;
 }
+
+/* ========================== Scroll Bar ========================== */
+
+/* Oculta a barra de rolagem em todos os navegadores */
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hidden {
+  -ms-overflow-style: none; /* Internet Explorer e Edge */
+  scrollbar-width: none; /* Firefox */
+}

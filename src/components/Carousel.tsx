@@ -8,7 +8,7 @@ import { Pagination, Navigation, Autoplay } from 'swiper/modules'
 
 export default function Carousel() {
   return (
-    <div className="w-full overflow-hidden md:max-w-[calc(100vw-160px)]">
+    <div className="w-full overflow-hidden max-w-[calc(100vw)] md:max-w-[calc(100vw-160px)]">
       <Swiper
         loop
         pagination={{ clickable: true }}
@@ -16,7 +16,7 @@ export default function Carousel() {
         autoplay={{ delay: 9000 }}
         modules={[Pagination, Navigation, Autoplay]}
         speed={1000}
-        className="h-60"
+        className="h-60 grow"
       >
         <SwiperSlide>
           <div className="bg-blue-200 h-full flex items-center justify-center rounded-md shadow">

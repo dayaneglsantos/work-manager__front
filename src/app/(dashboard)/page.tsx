@@ -20,13 +20,13 @@ const tasksData = [
 export default function Home() {
   return (
     <>
-      <Card className="mb-3  w-full">
+      <Card className="mb-3 w-full">
         <Carousel />
       </Card>
       <div className="flex flex-wrap gap-3">
         {tasksData.map((item, index) => (
           <Card
-            className="flex items-center justify-around gap-3 flex-1 min-w-[250px]"
+            className="flex items-center justify-around gap-3 flex-1 min-w-[300px]"
             key={index}
           >
             <Image
@@ -46,12 +46,12 @@ export default function Home() {
         ))}
 
         <div className="flex flex-wrap gap-3 w-full">
-          <Card className="flex-1">
+          <Card className="flex-1 min-w-md">
             <p className="font-bold text-center mb-3 text-lg">
               Aniversariantes do mês
             </p>
-            <div className="overflow-auto max-h-[400] pr-2">
-              <div className="flex items-center gap-3 mb-3">
+            <div className="flex flex-wrap justify-between items-center max-h-[400] pr-2">
+              <div className="flex items-center gap-3 ">
                 <Image
                   src={avatarImage}
                   alt="Calendário da semana"
@@ -61,13 +61,8 @@ export default function Home() {
                   <span>05/05 - Dayane Santos</span>
                   <span className="text-sm">Financeiro</span>
                 </div>
-                <Button
-                  title="Enviar mensagem"
-                  icon={faCommentDots}
-                  size="sm"
-                  className="ml-auto"
-                />
               </div>
+              <Button title="Enviar mensagem" icon={faCommentDots} size="sm" />
             </div>
           </Card>
           <Card>

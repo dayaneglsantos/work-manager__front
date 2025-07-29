@@ -20,7 +20,7 @@ const Button = ({
 }: ButtonProps) => {
   return (
     <button
-      className={`bg-primary cursor-pointer rounded-full p-2 hover:bg-primary-hover transition ease-in-out duration-300 text-white mt-3 ${size === 'sm' ? 'text-[12px]' : size === 'md' ? 'text-sm' : 'text-[16px]'} ${className}`}
+      className={`bg-primary cursor-pointer rounded-full p-2 hover:bg-primary-hover transition ease-in-out duration-300 text-white ${size === 'sm' ? 'text-[12px]' : size === 'md' ? 'text-sm' : 'text-[16px]'} ${className}`}
       onClick={onClick}
     >
       {title}

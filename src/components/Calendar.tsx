@@ -17,7 +17,7 @@ export default function Calendar() {
         mode="single"
         selected={selectedDay}
         onSelect={setSelectedDay}
-        className="text-sm"
+        className="text-sm mb-2"
         locale={ptBR}
         required
         styles={{

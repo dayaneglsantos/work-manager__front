@@ -19,7 +19,7 @@ export default function Header() {
 
   return (
     <>
-      <div className="h-16 p-2 pr-6 flex  items-center justify-between">
+      <div className="w-full h-16 p-2 pr-6 flex items-center justify-between">
         <span className="font-bold ml-12">
           Olá {user?.name}, hoje é{' '}
           {format(currentDate, " EEEE, 'dia' dd 'de' MMMM 'de' yyyy", {

@@ -10,11 +10,12 @@ import ForgotPassword from '@/screens/ForgotPassword'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Image from 'next/image'
-import { login } from '@/services/login/loginService'
+
 import toast, { Toaster } from 'react-hot-toast'
 import { LoginType } from '@/types/loginTypes'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { login } from '@/services/auth/loginService'
 
 export default function Login() {
   const [open, setOpen] = useState(false)
@@ -57,7 +58,6 @@ export default function Login() {
     try {
       const data = await login(values)
       if (data) {
-        toast.success('Login realizado com sucesso!')
         saveSession(data)
         router.push('/')
       }

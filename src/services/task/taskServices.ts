@@ -1,5 +1,6 @@
-import { TasksMetaType, TaskType } from '@/types/taskType'
+import { TaskType } from '@/types/taskType'
 import { api } from '@/utils/axios'
+import toast from 'react-hot-toast'
 
 export interface getTasksParams {
   page?: number
@@ -8,17 +9,12 @@ export interface getTasksParams {
   search?: string
 }
 
-interface GetTasksResponse {
-  data: TaskType[]
-  meta: TasksMetaType
-}
-
 export const getTasks = async ({
   page = 1,
   status = '',
   search = '',
   pageSize = 10
-}: getTasksParams = {}): Promise<GetTasksResponse> => {
+}: getTasksParams = {}) => {
   const params = {
     page,
     pageSize,
@@ -26,18 +22,32 @@ export const getTasks = async ({
     ...(search && { search })
   }
 
-  const response = await api.get(`/tasks`, {
-    params: {
-      ...params
+  try {
+    const { data, status } = await api.get('/tasks', { params })
+    if (status !== 200) {
+      toast.error('Erro ao buscar tarefas')
+    } else {
+      return data
     }
-  })
-  return response.data
+  } catch (error) {
+    console.error(error)
+    toast.error('Erro ao buscar tarefas')
+  }
 }
 
 export const updateTask = async (
   taskId: number,
   updatedData: Partial<TaskType>
 ) => {
-  const response = await api.put(`/tasks/${taskId}`, updatedData)
-  return response.data
+  try {
+    const { status } = await api.put(`/tasks/${taskId}`, updatedData)
+    if (status === 200) {
+      toast.success('Tarefa atualizada com sucesso!')
+    } else {
+      toast.error('Erro ao atualizar tarefa')
+    }
+  } catch (error) {
+    console.error(error)
+    toast.error('Erro ao atualizar tarefa')
+  }
 }

@@ -55,7 +55,7 @@ export default function Home() {
                 <Image
                   src={avatarImage}
                   alt="Calendário da semana"
-                  className="w-10 h-10 rounded-full "
+                  className="w-10 h-10 rounded-full"
                 />
                 <div className="flex flex-col gap-1">
                   <span>05/05 - Dayane Santos</span>

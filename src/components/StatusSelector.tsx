@@ -4,6 +4,7 @@ import { TaskType } from '@/types/taskType'
 import { useEffect, useRef, useState } from 'react'
 import Badge from './Badge'
 import { updateTask } from '@/services/task/taskServices'
+import handleEscKey from '@/utils/handleEscKey'
 
 interface StatusSelectorProps {
   task: TaskType
@@ -73,12 +74,24 @@ export default function StatusSelector({
   }
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      e.stopPropagation()
+      handleEscKey(e, () => setIsOpen(false))
+    }
+
     document.addEventListener('mouseup', handleClickOutsideStatus)
+    document.addEventListener('keydown', handleKeyDown)
 
     return () => {
       document.removeEventListener('mouseup', handleClickOutsideStatus)
+      document.removeEventListener('keydown', handleKeyDown)
     }
   }, [])
+
+  const handleClick = (e: any) => {
+    e.stopPropagation()
+    setIsOpen(!isOpen)
+  }
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -86,13 +99,11 @@ export default function StatusSelector({
         name={statusFormat(task.status)?.label}
         color={statusFormat(task.status)?.color}
         fullWidth
-        onClick={() => {
-          setIsOpen(!isOpen)
-        }}
+        onClick={(e) => handleClick(e)}
         className="cursor-pointer"
       />
       {isOpen && (
-        <div className="absolute left-0 z-10 w-full flex flex-col mt-1 gap-1 p-1 bg-gray-300 dark:bg-gray-700 rounded-md ">
+        <div className="absolute left-0 z-10 w-full flex flex-col mt-1 gap-2 p-1 py-2.5 bg-gray-300 dark:bg-gray-700 rounded-md ">
           {statusList
             .filter((item) => item.value !== task.status)
             .map((i) => (
@@ -101,9 +112,9 @@ export default function StatusSelector({
                 name={i.label}
                 color={i.color as any}
                 fullWidth
-                className="cursor-pointer block"
-                onClick={() => {
-                  console.log('cliquei')
+                className="cursor-pointer block h-5"
+                onClick={(e) => {
+                  e.stopPropagation()
                   updateTaskStatus(task.id, i.value as TaskType['status'])
                 }}
               />

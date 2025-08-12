@@ -163,7 +163,7 @@ export default function TasksPage({
                       className={`${task.priority === 'high' ? 'text-red-600' : task.priority === 'medium' ? 'text-gray-600' : 'text-cyan-400'}`}
                     />
                   </td>
-                  <td className="px-2 w-[130px] ">
+                  <td className="px-2 w-[130px]">
                     <StatusSelector task={task} statusList={statusList} />
                   </td>
                   <td className="rounded-r-md text-center p-1">

@@ -92,6 +92,18 @@ body {
   border-radius: 50%;
 }
 
+.rdp-day_button {
+  width: 40px;
+  height: 40px;
+}
+
+.rdp-day_button:hover {
+  background-color: var(--color-primary-hover);
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
 .rdp-selected .rdp-day_button {
   border: 1px solid var(--color-primary) !important;
 }
@@ -101,10 +113,12 @@ body {
 }
 
 .rdp-button_next,
-.rdp-button_previous {
+.rdp-button_previous,
+.rdp-day_button {
   transition: all 0.2s ease-in-out !important;
   padding: 8px;
   border-radius: 50%;
+  cursor: pointer;
 }
 
 .rdp-button_next:hover,

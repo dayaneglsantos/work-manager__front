@@ -1,6 +1,7 @@
 'use client'
 
 import { FilterListType } from '@/types/filterListType'
+import handleEscKey from '@/utils/handleEscKey'
 import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useEffect, useRef, useState } from 'react'
@@ -22,7 +23,7 @@ export interface SelectFieldProps {
   className?: string
   width?: number
   height?: number
-  setFiltersApplied: React.Dispatch<React.SetStateAction<boolean>>
+  setFiltersApplied?: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export default function SelectField({
@@ -56,7 +57,9 @@ export default function SelectField({
       setSelectedList([selected])
       setOpen(false)
     }
-    setFiltersApplied(true)
+    if (filter && setFiltersApplied) {
+      setFiltersApplied(true)
+    }
   }
 
   useEffect(() => {
@@ -88,11 +91,17 @@ export default function SelectField({
         setOpen(false)
       }
     }
+    const handleEsc = (e: KeyboardEvent) => {
+      e.stopPropagation()
+      handleEscKey(e, () => setOpen(false))
+    }
 
     document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEsc)
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEsc)
     }
   }, [])
 
@@ -126,11 +135,11 @@ export default function SelectField({
         />
       </div>
       {open && (
-        <div className="absolute z-10 bg-gray-100 dark:bg-gray-800 w-full max-h-[600px] overflow-y-auto rounded-md">
+        <div className="absolute z-10 bg-gray-100 dark:bg-primary-dark w-full max-h-[600px] overflow-y-auto rounded-md">
           {options?.map((option: Option) => (
             <div
               key={option.value}
-              className="p-2 shadow-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md cursor-pointer"
+              className="p-2 shadow-gray-400 hover:bg-gray-200 dark:hover:bg-primary-hover rounded-md cursor-pointer"
               onClick={() => handleSelect(option)}
             >
               {multiple && (

@@ -7,7 +7,7 @@ interface BadgeProps {
   color?: 'info' | 'success' | 'warning' | 'default' | 'error'
   name: string
   fullWidth?: boolean
-  onClick?: () => void
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void
   className?: string
 }
 

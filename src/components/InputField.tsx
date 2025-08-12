@@ -4,11 +4,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useState } from 'react'
 
 interface InputFieldProps {
-  type: string
+  type: 'password' | 'text'
   placeholder: string
   value: any
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   error?: string | undefined
+  transparentUntilFocus?: boolean
 }
 
 export default function InputField({
@@ -16,7 +17,8 @@ export default function InputField({
   placeholder,
   value,
   onChange,
-  error
+  error,
+  transparentUntilFocus = false
 }: InputFieldProps) {
   const [currentType, setCurrentType] = useState(type)
   const [showPassword, setShowPassword] = useState(false)
@@ -28,7 +30,9 @@ export default function InputField({
 
   return (
     <div className="flex flex-col w-full mb-3">
-      <div className="relative p-3 bg-gray-50 rounded-2xl text-primary-dark border-primary-light border-1 w-full mt-3">
+      <div
+        className={`relative p-3 rounded-[8px] w-full mt-3 ${transparentUntilFocus ? 'transition-all duration-300 dark:focus-within:bg-gray-700 focus-within:bg-gray-200 dark:focus-within:text-white' : 'bg-gray-50  dark:bg-gray-800 border-primary-light border-1'} `}
+      >
         <input
           type={currentType}
           placeholder={placeholder}

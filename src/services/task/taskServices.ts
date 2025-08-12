@@ -41,7 +41,7 @@ export const updateTask = async (
 ) => {
   try {
     const { status } = await api.put(`/tasks/${taskId}`, updatedData)
-    if (status === 200) {
+    if (status === 201) {
       toast.success('Tarefa atualizada com sucesso!')
     } else {
       toast.error('Erro ao atualizar tarefa')

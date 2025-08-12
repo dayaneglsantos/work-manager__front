@@ -1,5 +1,6 @@
 import Avatar from '@/components/Avatar'
 import DateInput from '@/components/DateInput'
+import InputField from '@/components/InputField'
 import Modal from '@/components/Modal'
 import SelectField from '@/components/SelectField'
 import { TaskType } from '@/types/taskType'
@@ -58,7 +59,7 @@ export default function TaskDetailsModal({
         <p className="text-bold text-lg">Id: {task.id}</p>
         <div className="flex items-center">
           Criado por{' '}
-          <div className="flex items-center bg-gray-700 p-1 px-1.5 rounded-lg mx-2">
+          <div className="flex items-center p-1 px-1.5 rounded-lg mx-2">
             <Avatar
               src={task.creator.profileImage}
               size="sm"
@@ -70,13 +71,15 @@ export default function TaskDetailsModal({
         </div>
         {/* </div> */}
       </div>
-      <input
-        className="text-center text-2xl w-full p-1 outline-0"
+      <InputField
+        type="text"
+        placeholder="Nome da tarefa"
         value={formValues.name}
         onChange={(e) => setValue('name', e.target.value)}
+        transparentUntilFocus
       />
       <textarea
-        className="w-full p-2 outline-0 resize-none"
+        className="w-full rounded-[8px] p-2 outline-0 resize-none transition-all duration-300 dark:focus-within:bg-gray-700 focus-within:bg-gray-200 "
         rows={5}
         value={formValues.description}
         onChange={(e) => setValue('description', e.target.value)}
@@ -88,7 +91,7 @@ export default function TaskDetailsModal({
             placeholder="Selecione uma data"
             onChange={(date) => setValue('deadline', date)}
             value={formValues.deadline}
-            width={200}
+            width={180}
           />
         </div>
         <div>

@@ -19,13 +19,20 @@ export interface TaskType {
     email: string
     profileImage: string
   }
+  department: {
+    id: number
+    name: string
+    managerId: number
+  }
   creator: {
     id: number
     name: string
     email: string
     profileImage: string
   }
-  department: string
+  blocking: TaskType | null
+  subtasks: TaskType[]
+  parentTask: TaskType | null
   tags: TagType[]
 }
 

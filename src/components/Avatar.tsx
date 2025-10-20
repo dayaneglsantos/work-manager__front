@@ -16,7 +16,7 @@ export default function Avatar({ size = 'md', src, className }: AvatarProps) {
 
   return (
     <div
-      className={`${sizeClasses[size]} ${className || ''} relative rounded-full overflow-hidden`}
+      className={`${sizeClasses[size]} ${className || ''} relative rounded-full overflow-hidden shrink-0`}
     >
       <Image
         src={src || defaultAvatar.src}

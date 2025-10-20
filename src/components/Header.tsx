@@ -21,7 +21,7 @@ export default function Header() {
     <>
       <div className="w-full h-16 p-2 pr-6 flex items-center justify-between">
         <span className="font-bold ml-12">
-          Olá {user?.name}, hoje é{' '}
+          Olá {user?.name}! Hoje é{' '}
           {format(currentDate, " EEEE, 'dia' dd 'de' MMMM 'de' yyyy", {
             locale: ptBR
           })}

@@ -1,7 +1,8 @@
 import handleEscKey from '@/utils/handleEscKey'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import { pushModal, popModal, getTopModal } from '@/utils/stackModal'
 
 interface ModalProps {
   open: boolean
@@ -16,14 +17,49 @@ export default function Modal({
   children,
   className
 }: ModalProps) {
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => handleEscKey(e, onClose)
+  const modalRef = useRef<HTMLDivElement>(null)
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
+  const handleClickOutside = (event: MouseEvent) => {
+    if (
+      modalRef.current &&
+      !modalRef.current.contains(event.target as Node) // Verifica se o clique foi fora do modalRef
+    ) {
+      onClose()
     }
-  }, [onClose])
+  }
+
+  useEffect(() => {
+    if (open) {
+      pushModal(onClose)
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        const topModal = getTopModal()
+        if (topModal === onClose) {
+          e.stopPropagation()
+          onClose()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    document.addEventListener('mouseup', handleClickOutside)
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('mouseup', handleClickOutside)
+      if (open) {
+        popModal()
+      }
+    }
+  }, [open, onClose])
+
+  useEffect(() => {
+    if (open && modalRef.current) {
+      modalRef.current.focus()
+    }
+  }, [open])
 
   return (
     <div
@@ -31,10 +67,12 @@ export default function Modal({
       onClick={onClose}
     >
       <div
-        className={`bg-gray-100 dark:bg-[#181C14] fixed md:w-6/12 h-10/12 rounded-2xl p-3 ${className}`}
+        className={`bg-gray-100 dark:bg-[#181C14] fixed md:w-6/12 h-10/12 rounded-2xl p-3 outline-0 ${className}`}
         onClick={(e) => {
           e.stopPropagation()
         }}
+        ref={modalRef}
+        tabIndex={-1}
       >
         <FontAwesomeIcon
           icon={faXmark}

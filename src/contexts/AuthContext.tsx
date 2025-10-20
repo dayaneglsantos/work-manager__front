@@ -1,6 +1,7 @@
 'use client'
 
 import { SessionType } from '@/types/sessionType'
+import { api } from '@/utils/axios'
 import { useRouter } from 'next/navigation'
 import {
   createContext,
@@ -37,7 +38,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setSession(newSession)
   }
 
-  const clearSession = () => {
+  const clearSession = async () => {
+    await api.post('/logout')
     localStorage.removeItem('session')
     setSession(null)
     router.push('/login')

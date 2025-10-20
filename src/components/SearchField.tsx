@@ -39,13 +39,18 @@ export default function SearchField({
 
   return (
     <div
-      style={{ width: item?.width || 300, height: item?.height || 40 }}
-      className={`flex items-center justify-between border-gray-400 border rounded-md p-1.5 ${focused ? 'bg-gray-100 dark:bg-gray-800' : ''} ${item?.className}`}
+      style={{
+        minWidth: '300px',
+        width: item?.width ? `${item.width}px` : '100%',
+        height: item?.height || 40
+      }}
+      className={`w-full sm:w-auto flex items-center justify-between border-gray-400 border rounded-md p-1.5 flex-grow md:flex-grow-0 ${focused ? 'bg-gray-100 dark:bg-gray-800' : ''}
+    ${item?.className}`}
     >
       <input
         type="text"
         placeholder={item?.placeholder}
-        className={`w-full outline-none`}
+        className="w-full outline-none"
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         onChange={(e) => handleChange(e.target.value)}

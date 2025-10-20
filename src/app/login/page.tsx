@@ -12,7 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import Image from 'next/image'
 
 import toast, { Toaster } from 'react-hot-toast'
-import { LoginType } from '@/types/loginTypes'
+import { LoginType } from '@/types/loginType'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { login } from '@/services/auth/loginService'
@@ -88,9 +88,9 @@ export default function Login() {
           className="relative z-10 text-white text-center w-full"
         >
           <h1 className="mb-6 text-3xl">Faça login na plataforma</h1>
-          <div className="flex flex-col mx-auto md:w-md mb-3 p-3">
+          <div className="flex flex-col mx-auto md:w-md mb-3 p-3 text-black">
             <InputField
-              type="email"
+              type="text"
               placeholder="E-mail"
               value={formValues.email}
               onChange={(e) => setValue('email', e.target.value)}

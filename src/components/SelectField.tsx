@@ -1,14 +1,15 @@
 'use client'
 
-import { FilterListType } from '@/types/filterListType'
 import handleEscKey from '@/utils/handleEscKey'
 import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useEffect, useRef, useState } from 'react'
+import Avatar from './Avatar'
 
 interface Option {
   label: string
-  value: string
+  value: string | number
+  avatar?: string
 }
 
 export interface SelectFieldProps {
@@ -76,7 +77,7 @@ export default function SelectField({
     } else if (onChange) {
       onChange(
         multiple
-          ? selectedList.map((item) => item?.value)
+          ? selectedList.map((item: any) => item?.value)
           : selectedList[0]?.value
       )
     }
@@ -116,10 +117,17 @@ export default function SelectField({
   }, [value])
 
   return (
-    <div className={`relative  ${className}`} ref={selectRef}>
+    <div
+      className={`relative flex-grow md:flex-grow-0 ${className}`}
+      ref={selectRef}
+    >
       <div
-        style={{ width: width || 300, height: height || 40 }}
-        className="flex items-center justify-between border border-gray-400 rounded-md p-2 cursor-pointer"
+        style={{
+          maxWidth: '100%',
+          width: width ? `${width}px` : '100%',
+          height: height || 40
+        }}
+        className={`w-full flex items-center justify-between border border-gray-400 rounded-md p-2 cursor-pointer`}
         onClick={() => setOpen(!open)}
       >
         {selectedList.length > 0 ? (
@@ -136,25 +144,36 @@ export default function SelectField({
       </div>
       {open && (
         <div className="absolute z-10 bg-gray-100 dark:bg-primary-dark w-full max-h-[600px] overflow-y-auto rounded-md">
-          {options?.map((option: Option) => (
-            <div
-              key={option.value}
-              className="p-2 shadow-gray-400 hover:bg-gray-200 dark:hover:bg-primary-hover rounded-md cursor-pointer"
-              onClick={() => handleSelect(option)}
-            >
-              {multiple && (
-                <input
-                  type="checkbox"
-                  className="mr-2"
-                  checked={selectedList.some(
-                    (item) => item.value === option.value
+          {options.length > 0 ? (
+            options?.map((option: Option) => (
+              <div
+                key={option.value}
+                className="p-2 shadow-gray-400 hover:bg-gray-200 dark:hover:bg-primary-hover rounded-md cursor-pointer"
+                onClick={() => handleSelect(option)}
+              >
+                {multiple && (
+                  <input
+                    type="checkbox"
+                    className="mr-2"
+                    checked={selectedList.some(
+                      (item) => item.value === option.value
+                    )}
+                    onChange={() => handleSelect(option)}
+                  />
+                )}
+                <div className="flex items-center gap-1">
+                  {option.avatar && (
+                    <Avatar src={option.avatar} size="sm" className="mr-2" />
                   )}
-                  onChange={() => handleSelect(option)}
-                />
-              )}
-              <span>{option.label}</span>
+                  <span>{option.label}</span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-2 shadow-gray-400 hover:bg-gray-200 dark:hover:bg-primary-hover rounded-md cursor-pointer">
+              Sem opções disponíveis
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>

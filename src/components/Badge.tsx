@@ -9,6 +9,7 @@ interface BadgeProps {
   fullWidth?: boolean
   onClick?: (e: React.MouseEvent<HTMLDivElement>) => void
   className?: string
+  ref?: React.Ref<HTMLDivElement | HTMLButtonElement>
 }
 
 export default function Badge({
@@ -18,7 +19,8 @@ export default function Badge({
   name,
   fullWidth = false,
   onClick,
-  className
+  className,
+  ref
 }: BadgeProps) {
   const colors = {
     info: 'bg-info hover:bg-info-hover',
@@ -32,6 +34,7 @@ export default function Badge({
     <div
       className={`flex items-center gap-1 ${colors[color] ?? colors.default} rounded-3xl p-1 px-2 text-${size} text-white justify-center ${fullWidth ? 'w-full' : 'w-fit'} ${className ?? ''}`}
       onClick={onClick}
+      ref={ref as any}
     >
       <span>{name}</span>
       {icon && (

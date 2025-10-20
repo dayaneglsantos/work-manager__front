@@ -15,9 +15,9 @@ export default function FiltersList({
   setFiltersApplied
 }: FiltersListProps) {
   return (
-    <div className="flex items-center gap-2 ">
+    <div className="flex items-center gap-2 flex-wrap">
       {list.map((item: FilterListType, index) => (
-        <div key={index}>
+        <div key={index} className="flex flex-grow md:flex-grow-0">
           {item.type === 'select' && (
             <SelectField
               options={item.options ?? []}
@@ -28,6 +28,8 @@ export default function FiltersList({
               placeholder={item.placeholder}
               value={item.value}
               setFiltersApplied={setFiltersApplied}
+              className={item.className}
+              width={item.width}
             />
           )}
           {item.type === 'search' && (

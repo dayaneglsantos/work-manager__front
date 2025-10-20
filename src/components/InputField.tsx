@@ -29,7 +29,7 @@ export default function InputField({
   }
 
   return (
-    <div className="flex flex-col w-full mb-3">
+    <div className="flex flex-col grow mb-3">
       <div
         className={`relative p-3 rounded-[8px] w-full mt-3 ${transparentUntilFocus ? 'transition-all duration-300 dark:focus-within:bg-gray-700 focus-within:bg-gray-200 dark:focus-within:text-white' : 'bg-gray-50  dark:bg-gray-800 border-primary-light border-1'} `}
       >

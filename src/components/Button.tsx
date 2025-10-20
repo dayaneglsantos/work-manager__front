@@ -9,6 +9,7 @@ interface ButtonProps {
   icon?: IconProp
   className?: string
   size?: 'sm' | 'md' | 'lg'
+  disabled?: boolean
 }
 
 const Button = ({
@@ -16,12 +17,14 @@ const Button = ({
   onClick,
   icon,
   className,
-  size = 'md'
+  size = 'md',
+  disabled
 }: ButtonProps) => {
   return (
     <button
-      className={`bg-primary cursor-pointer rounded-full p-2 hover:bg-primary-hover transition ease-in-out duration-300 text-white ${size === 'sm' ? 'text-[12px]' : size === 'md' ? 'text-sm' : 'text-[16px]'} ${className}`}
+      className={`bg-primary  rounded-full p-2  transition ease-in-out duration-300 text-white ${size === 'sm' ? 'text-[12px]' : size === 'md' ? 'text-sm' : 'text-[16px]'} ${className} ${disabled ? 'opacity-50 cursor-default' : 'cursor-pointer hover:bg-primary-hover'}`}
       onClick={onClick}
+      disabled={disabled}
     >
       {title}
       {icon && <FontAwesomeIcon icon={icon} className="ml-2" />}

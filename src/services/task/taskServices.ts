@@ -10,14 +10,16 @@ export interface getTasksParams {
 }
 
 export const getTasks = async ({
-  page = 1,
+  page,
+  pageSize,
   status = '',
-  search = '',
-  pageSize = 10
+  search = ''
 }: getTasksParams = {}) => {
   const params = {
     page,
     pageSize,
+    ...(page && { page }),
+    ...(pageSize && { pageSize }),
     ...(status && { status }),
     ...(search && { search })
   }
@@ -32,6 +34,17 @@ export const getTasks = async ({
   } catch (error) {
     console.error(error)
     toast.error('Erro ao buscar tarefas')
+  }
+}
+
+const getTask = async (taskId: number) => {
+  try {
+    const { data, status } = await api.get(`/tasks/${taskId}`)
+    if (status === 200) {
+      return data
+    }
+  } catch (error) {
+    console.error('Error fetching task:', error)
   }
 }
 

@@ -1,4 +1,4 @@
-import { LoginType } from '@/types/loginTypes'
+import { LoginType } from '@/types/loginType'
 import { api } from '@/utils/axios'
 
 export const login = async ({ email, password }: LoginType) => {

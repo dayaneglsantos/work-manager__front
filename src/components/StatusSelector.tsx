@@ -17,11 +17,11 @@ interface StatusSelectorProps {
 
 export default function StatusSelector({
   task,
-
   statusList
 }: StatusSelectorProps) {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [isOpen, setIsOpen] = useState(false)
+  const [openDirection, setOpenDirection] = useState<'down' | 'up'>('down')
 
   const statusFormat = (
     status: string
@@ -88,6 +88,21 @@ export default function StatusSelector({
     }
   }, [])
 
+  useEffect(() => {
+    if (isOpen && dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect() // Pega as dimensões e posição do item clicado
+      const spaceBelow = window.innerHeight - rect.bottom // Espaço disponível abaixo do item
+      const spaceAbove = rect.top // Espaço disponível acima do item
+
+      // Se o espaço abaixo for menor que 150px e houver mais espaço acima, abre para cima
+      if (spaceBelow < 150 && spaceAbove > spaceBelow) {
+        setOpenDirection('up')
+      } else {
+        setOpenDirection('down')
+      }
+    }
+  }, [isOpen])
+
   const handleClick = (e: any) => {
     e.stopPropagation()
     setIsOpen(!isOpen)
@@ -103,7 +118,10 @@ export default function StatusSelector({
         className="cursor-pointer"
       />
       {isOpen && (
-        <div className="absolute left-0 z-10 w-full flex flex-col mt-1 gap-2 p-1 py-2.5 bg-gray-300 dark:bg-gray-700 rounded-md ">
+        <div
+          className={`absolute left-0 z-10 w-full flex flex-col mt-1 gap-2 p-1 py-2.5 bg-gray-300 dark:bg-gray-700 rounded-md
+            ${openDirection === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'}`}
+        >
           {statusList
             .filter((item) => item.value !== task.status)
             .map((i) => (

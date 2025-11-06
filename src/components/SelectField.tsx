@@ -44,6 +44,25 @@ export default function SelectField({
   const [open, setOpen] = useState(false)
   const [selectedList, setSelectedList] = useState<Option[]>([])
   const selectRef = useRef<HTMLDivElement>(null)
+  const [optionsPosition, setOptionsPosition] = useState<'up' | 'down'>('down')
+
+  const calculatePosition = () => {
+    if (selectRef.current) {
+      const inputRect = selectRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - inputRect.bottom
+
+      if (spaceBelow < 250) {
+        setOptionsPosition('up')
+      } else {
+        setOptionsPosition('down')
+      }
+    }
+  }
+
+  const optionsClasses =
+    optionsPosition === 'up'
+      ? 'bottom-full mb-1 left-0'
+      : 'top-full mt-0.5 left-0'
 
   const handleSelect = (selected: Option) => {
     if (multiple) {
@@ -128,7 +147,10 @@ export default function SelectField({
           height: height || 40
         }}
         className={`w-full flex items-center justify-between border border-gray-400 rounded-md p-2 cursor-pointer`}
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          setOpen(!open)
+          calculatePosition()
+        }}
       >
         {selectedList.length > 0 ? (
           <span className="overflow-hidden text-ellipsis whitespace-nowrap">
@@ -143,12 +165,14 @@ export default function SelectField({
         />
       </div>
       {open && (
-        <div className="absolute z-10 bg-gray-100 dark:bg-primary-dark w-full max-h-[600px] overflow-y-auto rounded-md">
+        <div
+          className={`absolute z-10 bg-gray-200 dark:bg-gray-700 w-full max-h-[600px] overflow-y-auto rounded-md ${optionsClasses}`}
+        >
           {options.length > 0 ? (
             options?.map((option: Option) => (
               <div
                 key={option.value}
-                className="p-2 shadow-gray-400 hover:bg-gray-200 dark:hover:bg-primary-hover rounded-md cursor-pointer"
+                className="p-2 shadow-gray-400 hover:bg-gray-300 dark:hover:bg-gray-800 rounded-md cursor-pointer"
                 onClick={() => handleSelect(option)}
               >
                 {multiple && (

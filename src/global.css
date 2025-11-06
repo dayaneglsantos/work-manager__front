@@ -18,6 +18,8 @@ body {
   --color-dark-background: #07000d;
   --color-light-background: #ededed;
 
+  --color-dark: #181c14;
+
   --color-primary: #725cad;
   --color-primary-light: #9b7ebd;
   --color-primary-dark: #3b1e54;
@@ -25,14 +27,14 @@ body {
   --color-secondary: #84a98c;
   --color-secondary-light: #b9fbc0;
   --color-secondary-dark: #2a9d8f;
-  --color-warning: var(--color-orange-600);
-  --color-warning-hover: var(--color-orange-700);
+  --color-warning: var(--color-orange-700);
+  --color-warning-hover: var(--color-orange-800);
   --color-error: var(--color-red-800);
   --color-error-hover: var(--color-red-900);
-  --color-success: var(--color-green-600);
-  --color-success-hover: var(--color-green-700);
-  --color-info: var(--color-cyan-600);
-  --color-info-hover: var(--color-cyan-700);
+  --color-success: var(--color-green-700);
+  --color-success-hover: var(--color-green-800);
+  --color-info: var(--color-cyan-700);
+  --color-info-hover: var(--color-cyan-800);
 
   --animate-loader-circle: circleLoader 0.5s alternate infinite ease;
   --animate-loader-shadow: loaderShadow 0.5s alternate infinite ease;
@@ -88,7 +90,7 @@ body {
 .rdp-today {
   color: var(--color-primary-light) !important;
   font-weight: bold;
-  background-color: rgba(90, 24, 154, 0.04) !important;
+  background-color: rgba(168, 150, 193, 0.04) !important;
   border-radius: 50%;
 }
 
@@ -116,7 +118,7 @@ body {
 .rdp-button_previous,
 .rdp-day_button {
   transition: all 0.2s ease-in-out !important;
-  padding: 8px;
+  padding: 4px;
   border-radius: 50%;
   cursor: pointer;
 }

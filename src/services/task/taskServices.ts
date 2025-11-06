@@ -53,8 +53,8 @@ export const updateTask = async (
   updatedData: Partial<TaskType>
 ) => {
   try {
-    const { status } = await api.put(`/tasks/${taskId}`, updatedData)
-    if (status === 201) {
+    const { status } = await api.patch(`/tasks/${taskId}`, updatedData)
+    if (status === 200) {
       toast.success('Tarefa atualizada com sucesso!')
     } else {
       toast.error('Erro ao atualizar tarefa')

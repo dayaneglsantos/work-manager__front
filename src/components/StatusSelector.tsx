@@ -13,11 +13,13 @@ interface StatusSelectorProps {
     value: string
     color: string
   }[]
+  updateList?: () => void
 }
 
 export default function StatusSelector({
   task,
-  statusList
+  statusList,
+  updateList
 }: StatusSelectorProps) {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [isOpen, setIsOpen] = useState(false)
@@ -58,10 +60,16 @@ export default function StatusSelector({
     }
   }
 
-  const updateTaskStatus = (taskId: number, newStatus: TaskType['status']) => {
-    updateTask(taskId, { status: newStatus })
+  const updateTaskStatus = async (
+    taskId: number,
+    newStatus: TaskType['status']
+  ) => {
+    await updateTask(taskId, { status: newStatus })
     setIsOpen(false)
     task.status = newStatus
+    if (updateList) {
+      updateList()
+    }
   }
 
   const handleClickOutsideStatus = (event: MouseEvent) => {
@@ -119,7 +127,7 @@ export default function StatusSelector({
       />
       {isOpen && (
         <div
-          className={`absolute left-0 z-10 w-full flex flex-col mt-1 gap-2 p-1 py-2.5 bg-gray-300 dark:bg-gray-700 rounded-md
+          className={`absolute left-0 z-10 w-full flex flex-col mt-1 gap-2 p-1 py-2.5 bg-white dark:bg-dark rounded-md shadow-lg dark:shadow-black/30
             ${openDirection === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'}`}
         >
           {statusList

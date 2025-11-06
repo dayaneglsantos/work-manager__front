@@ -22,6 +22,7 @@ import StatusSelector from '@/components/StatusSelector'
 import Pagination from '@/components/Pagination'
 import TaskDetailsModal from './DetailsModal'
 import Dropdown from '@/components/Dropdown/Dropdown'
+import { get } from 'http'
 
 interface FiltersType {
   name: string
@@ -196,7 +197,11 @@ export default function TasksPage() {
                   )}
                 </td>
                 <td className="px-2 w-[130px]">
-                  <StatusSelector task={task} statusList={statusList} />
+                  <StatusSelector
+                    task={task}
+                    statusList={statusList}
+                    updateList={getTasksList}
+                  />
                 </td>
                 <td className="rounded-r-md text-center p-1">
                   <FontAwesomeIcon
@@ -219,6 +224,7 @@ export default function TasksPage() {
           open={true}
           onClose={() => setSelectedTask(null)}
           task={selectedTask}
+          updateList={getTasksList}
         />
       )}
     </>

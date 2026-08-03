@@ -10,6 +10,7 @@ import { faCirclePlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import EmptyContent from './EmptyContent'
 import { set } from 'date-fns'
+import { api } from '@/utils/axios'
 
 interface TagsModalProps {
   open: boolean
@@ -17,12 +18,16 @@ interface TagsModalProps {
   task: TaskType
 }
 
+interface TagOption {
+  value: number | string
+  label: string
+}
+
 export default function TagsModal({ open, onClose, task }: TagsModalProps) {
-  const [availableTags, setAvailableTags] = useState<
-    { value: number | string; label: string }[]
-  >([])
+  const [availableTags, setAvailableTags] = useState<TagOption[]>([])
   const [newTagName, setNewTagName] = useState<string | null>(null)
   const [taskTags, setTaskTags] = useState(task.tags || [])
+  const [selectedTagId, setSelectedTagId] = useState(null)
 
   const fetchTags = async () => {
     const data = await getTags()
@@ -46,6 +51,26 @@ export default function TagsModal({ open, onClose, task }: TagsModalProps) {
       fetchTags()
     }
   }, [open])
+
+  // adicionar a tag selecionada a tarefa
+  const addTagToTask = async () => {
+    if (!selectedTagId) return
+    try {
+      const { data, status } = await api.post('tasks_tags', {
+        taskId: task.id,
+        tagId: selectedTagId
+      })
+      if (status === 201) {
+        setTaskTags((prev: any) => [...prev, data])
+      }
+      setSelectedTagId(null)
+    } catch (error) {
+      console.error('Erro ao adicionar tag à tarefa:', error)
+    }
+  }
+
+  // Fazer a criação da tag, adicionar a tag a tarefa e atualizar a lista de tags da tarefa
+  const createAndAddTagToTask = async () => {}
 
   return (
     <Modal
@@ -71,11 +96,13 @@ export default function TagsModal({ open, onClose, task }: TagsModalProps) {
           options={availableTags}
           placeholder="Selecione uma tag"
           className="w-full"
+          onChange={(value: any) => setSelectedTagId(value)}
         />
+
         <FontAwesomeIcon
           icon={faCirclePlus}
-          className="text-primary cursor-pointer text-[20px]"
-          onClick={() => {}}
+          className={`${selectedTagId ? 'text-primary cursor-pointer' : 'text-gray-600 cursor-default'} text-[20px] `}
+          onClick={addTagToTask}
         />
       </div>
       {newTagName !== null && (

@@ -8,6 +8,7 @@ import {
   ReactNode,
   useContext,
   useEffect,
+  useCallback,
   useState
 } from 'react'
 
@@ -16,6 +17,7 @@ type AuthContextType = {
   loading: boolean
   saveSession: (newSession: SessionType) => void
   clearSession: () => void
+  clearLocalSession: () => void
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -38,16 +40,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setSession(newSession)
   }
 
-  const clearSession = async () => {
-    await api.post('/logout')
+  const clearLocalSession = useCallback(() => {
     localStorage.removeItem('session')
     setSession(null)
+  }, [])
+
+  const clearSession = async () => {
+    await api.post('/logout')
+    clearLocalSession()
     router.push('/login')
   }
 
   return (
     <AuthContext.Provider
-      value={{ session, saveSession, clearSession, loading }}
+      value={{ session, saveSession, clearSession, clearLocalSession, loading }}
     >
       {children}
     </AuthContext.Provider>

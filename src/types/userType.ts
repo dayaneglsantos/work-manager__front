@@ -10,7 +10,8 @@ export interface UserType {
   currentSalary?: number
   admissionDate?: string
   currentPosition?: string
-  employmentStatus?: 'active' | 'terminated' | 'resigned' | 'onLeave'
+  employmentStatus?: 'active' | 'inactive' | 'terminated' | 'resigned'
+  statusReason?: string | null
   notes?: string
   address?: {
     zipCode: string

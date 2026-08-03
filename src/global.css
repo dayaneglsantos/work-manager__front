@@ -146,3 +146,13 @@ body {
   -ms-overflow-style: none; /* Internet Explorer e Edge */
   scrollbar-width: none; /* Firefox */
 }
+/* Mantém o preenchimento automático consistente com os campos claros. */
+.input-field--light input:-webkit-autofill,
+.input-field--light input:-webkit-autofill:hover,
+.input-field--light input:-webkit-autofill:focus,
+.input-field--light input:-webkit-autofill:active {
+  -webkit-text-fill-color: #000;
+  -webkit-box-shadow: 0 0 0 1000px #fff inset;
+  box-shadow: 0 0 0 1000px #fff inset;
+  caret-color: #000;
+}

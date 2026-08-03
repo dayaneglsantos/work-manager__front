@@ -1,4 +1,3 @@
-import ThemeProvider from '@/providers/ThemeProvider'
 import '@/global.css'
 import type { Metadata } from 'next'
 import Navbar from '@/components/Navbar'
@@ -17,7 +16,7 @@ export default function CommonLayout({
   children: React.ReactNode
 }) {
   return (
-    <ThemeProvider>
+    <>
       <Toaster />
       <ProtectRoute>
         <div className="flex min-h-screen text-foreground relative">
@@ -33,6 +32,6 @@ export default function CommonLayout({
           </main>
         </div>
       </ProtectRoute>
-    </ThemeProvider>
+    </>
   )
 }

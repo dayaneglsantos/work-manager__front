@@ -9,7 +9,6 @@ export interface SessionType {
   employment_status: string
   supervisor_id: number
   profile_id: number
-  token: string
   last_access: Date
   profile_img: string
   permissions: PermissionsType[]

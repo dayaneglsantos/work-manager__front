@@ -9,7 +9,9 @@ interface InputFieldProps {
   value: any
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   error?: string | undefined
+  invalid?: boolean
   transparentUntilFocus?: boolean
+  forceLightAppearance?: boolean
 }
 
 export default function InputField({
@@ -18,10 +20,18 @@ export default function InputField({
   value,
   onChange,
   error,
-  transparentUntilFocus = false
+  invalid = false,
+  transparentUntilFocus = false,
+  forceLightAppearance = false
 }: InputFieldProps) {
   const [currentType, setCurrentType] = useState(type)
   const [showPassword, setShowPassword] = useState(false)
+  const hasError = Boolean(error) || invalid
+  const appearanceClasses = transparentUntilFocus
+    ? `transition-all duration-300 dark:focus-within:bg-gray-700 focus-within:bg-gray-200 dark:focus-within:text-white ${hasError ? 'border-error border-1' : ''}`
+    : forceLightAppearance
+      ? `input-field--light bg-white text-black border-1 ${hasError ? 'border-error' : 'border-primary-light'}`
+      : `bg-gray-50 dark:bg-gray-800 border-1 ${hasError ? 'border-error' : 'border-primary-light'}`
 
   const toggleShowPassword = () => {
     setCurrentType(currentType === 'password' ? 'text' : 'password')
@@ -31,26 +41,26 @@ export default function InputField({
   return (
     <div className="flex flex-col grow mb-3">
       <div
-        className={`relative p-3 rounded-[8px] w-full mt-3 ${transparentUntilFocus ? 'transition-all duration-300 dark:focus-within:bg-gray-700 focus-within:bg-gray-200 dark:focus-within:text-white' : 'bg-gray-50  dark:bg-gray-800 border-primary-light border-1'} `}
+        className={`relative p-3 rounded-[8px] w-full mt-3 ${appearanceClasses}`}
       >
         <input
           type={currentType}
           placeholder={placeholder}
-          className="w-11/12 outline-0"
+          className="w-11/12 bg-transparent outline-0"
           value={value}
           onChange={onChange}
         />
         {type === 'password' && !showPassword && (
           <FontAwesomeIcon
             icon={faEye}
-            className="absolute right-4 top-4 cursor-pointer h-4"
+            className="absolute right-4 top-4 cursor-pointer h-4 text-gray-400"
             onClick={toggleShowPassword}
           />
         )}
         {currentType === 'text' && showPassword && (
           <FontAwesomeIcon
             icon={faEyeSlash}
-            className="absolute right-4 top-4 cursor-pointer h-4"
+            className="absolute right-4 top-4 cursor-pointer h-4 text-gray-400"
             onClick={toggleShowPassword}
           />
         )}

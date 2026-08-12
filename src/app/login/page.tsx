@@ -1,25 +1,20 @@
 'use client'
-import InputField from '@/components/InputField'
-import bgImage from '@/assets/images/login-bg.jpg' // Adjust the path as necessary
+
+import AuthLayout from '@/components/AuthLayout'
 import Button from '@/components/Button'
-import { useForm } from 'react-hook-form'
-import { useEffect, useRef, useState } from 'react'
-import Modal from '@/components/Modal'
-
-import ForgotPassword from '@/screens/ForgotPassword'
-import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
-import Image from 'next/image'
-
-import toast, { Toaster } from 'react-hot-toast'
-import { LoginType } from '@/types/loginType'
-import { useRouter } from 'next/navigation'
+import InputField from '@/components/InputField'
 import { useAuth } from '@/contexts/AuthContext'
 import { login } from '@/services/auth/loginService'
+import { LoginType } from '@/types/loginType'
+import { zodResolver } from '@hookform/resolvers/zod'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import toast, { Toaster } from 'react-hot-toast'
+import { z } from 'zod'
 
 export default function Login() {
-  const [open, setOpen] = useState(false)
-  const [forgotPasswordStep, setForgotPasswordStep] = useState(1)
   const [invalidCredentials, setInvalidCredentials] = useState(false)
   const router = useRouter()
   const { saveSession, session, loading, clearLocalSession } = useAuth()
@@ -35,19 +30,8 @@ export default function Login() {
   }, [session, loading, clearLocalSession])
 
   const loginSchema = z.object({
-    email: z.string().email('Email inválido').min(1, 'Campo obrigatório'),
+    email: z.string().email('E-mail inválido').min(1, 'Campo obrigatório'),
     password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres')
-  })
-
-  const defaultValues = {
-    email: '',
-    password: ''
-  }
-
-  const methods = useForm({
-    defaultValues,
-    mode: 'onBlur',
-    resolver: zodResolver(loginSchema)
   })
 
   const {
@@ -55,7 +39,11 @@ export default function Login() {
     setValue,
     watch,
     formState: { errors }
-  } = methods
+  } = useForm<LoginType>({
+    defaultValues: { email: '', password: '' },
+    mode: 'onBlur',
+    resolver: zodResolver(loginSchema)
+  })
 
   const formValues = watch()
 
@@ -72,42 +60,25 @@ export default function Login() {
         setInvalidCredentials(true)
       }
 
-      const errorMessage =
-        error?.response?.data?.error || 'Erro ao fazer login.'
-      toast.error(errorMessage)
+      toast.error(error?.response?.data?.error || 'Erro ao fazer login.')
     }
   }
 
   return (
     <>
-      <div
-        className={`relative h-screen w-screen  flex items-center justify-center`}
-      >
-        <Image
-          src={bgImage}
-          alt="Background"
-          fill
-          priority
-          quality={100}
-          className="object-cover object-center"
-        />
-        <div className="absolute inset-0 bg-black opacity-80"></div>
-
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="relative z-10 text-white text-center bg-gray-400/15 p-8 rounded-xl"
-        >
+      <AuthLayout className="max-w-xl text-center">
+        <form onSubmit={handleSubmit(onSubmit)} className="w-full">
           <h1 className="mb-6 text-3xl">Faça login na plataforma</h1>
-          <div className="flex justify-center flex-col mx-auto md:w-md mb-3 p-3 text-black">
+          <div className="mx-auto mb-3 flex max-w-md flex-col justify-center p-3 text-black">
             <InputField
               type="text"
               placeholder="E-mail"
               value={formValues.email}
-              onChange={(e) => {
+              onChange={(event) => {
                 setInvalidCredentials(false)
-                setValue('email', e.target.value)
+                setValue('email', event.target.value)
               }}
-              error={errors?.email?.message}
+              error={errors.email?.message}
               invalid={invalidCredentials}
               forceLightAppearance
             />
@@ -115,40 +86,28 @@ export default function Login() {
               type="password"
               placeholder="Senha"
               value={formValues.password}
-              onChange={(e) => {
+              onChange={(event) => {
                 setInvalidCredentials(false)
-                setValue('password', e.target.value)
+                setValue('password', event.target.value)
               }}
-              error={errors?.password?.message}
+              error={errors.password?.message}
               invalid={invalidCredentials}
               forceLightAppearance
             />
             <Button
               title="Entrar"
-              className="w-52 mt-4 self-center font-bold"
+              className="mt-4 w-52 self-center font-bold"
             />
           </div>
-          <span
-            className="underline cursor-pointer"
-            onClick={() => setOpen(true)}
+          <Link
+            href="/recuperar-senha"
+            className="underline decoration-white/60 underline-offset-4 transition-colors hover:text-primary-light"
           >
             Esqueci a senha
-          </span>
+          </Link>
         </form>
-      </div>
+      </AuthLayout>
       <Toaster />
-      <Modal
-        open={open}
-        onClose={() => {
-          setOpen(false)
-          setForgotPasswordStep(1)
-        }}
-      >
-        <ForgotPassword
-          step={forgotPasswordStep}
-          setStep={setForgotPasswordStep}
-        />
-      </Modal>
     </>
   )
 }

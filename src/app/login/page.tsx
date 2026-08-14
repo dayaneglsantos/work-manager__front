@@ -31,14 +31,14 @@ export default function Login() {
 
   const loginSchema = z.object({
     email: z.string().email('E-mail inválido').min(1, 'Campo obrigatório'),
-    password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres')
+    password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres')
   })
 
   const {
     handleSubmit,
     setValue,
     watch,
-    formState: { errors }
+    formState: { errors, isSubmitting }
   } = useForm<LoginType>({
     defaultValues: { email: '', password: '' },
     mode: 'onBlur',
@@ -48,19 +48,26 @@ export default function Login() {
   const formValues = watch()
 
   const onSubmit = async (values: LoginType) => {
+    const loadingToast = toast.loading('Entrando...')
+
     try {
       setInvalidCredentials(false)
       const data = await login(values)
       if (data) {
+        toast.success('Login realizado com sucesso.', { id: loadingToast })
         saveSession(data)
         router.push('/')
+      } else {
+        toast.dismiss(loadingToast)
       }
     } catch (error: any) {
       if (error?.response?.status === 401) {
         setInvalidCredentials(true)
       }
 
-      toast.error(error?.response?.data?.error || 'Erro ao fazer login.')
+      toast.error(error?.response?.data?.error || 'Erro ao fazer login.', {
+        id: loadingToast
+      })
     }
   }
 
@@ -95,7 +102,8 @@ export default function Login() {
               forceLightAppearance
             />
             <Button
-              title="Entrar"
+              title={isSubmitting ? 'Entrando...' : 'Entrar'}
+              disabled={isSubmitting}
               className="mt-4 w-52 self-center font-bold"
             />
           </div>

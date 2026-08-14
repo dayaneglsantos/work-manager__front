@@ -32,7 +32,7 @@ const menuList = [
 export default function Navbar() {
   const [openMenu, setOpenMenu] = useState(false)
   const router = useRouter()
-  const { clearSession } = useAuth()
+  const { clearSession, isLoggingOut } = useAuth()
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -87,12 +87,13 @@ export default function Navbar() {
         <nav className="flex gap-3 flex-col items-center w-full my-4 grow">
           {menuList.map((item, index) => (
             <span
-              className={`group relative flex justify-start w-full h-10 cursor-pointer ${index === menuList.length - 1 ? 'mt-auto' : ''}`}
+              className={`group relative flex justify-start w-full h-10 cursor-pointer ${index === menuList.length - 1 ? 'mt-auto' : ''} ${item.name === 'Sair' && isLoggingOut ? 'pointer-events-none opacity-50' : ''}`}
               key={index}
+              aria-disabled={item.name === 'Sair' && isLoggingOut}
               onClick={() => {
                 if (item.name === 'Sair') {
-                  clearSession()
-                  router.push('/login')
+                  if (isLoggingOut) return
+                  void clearSession()
                 } else {
                   router.push(item.path)
                 }
@@ -104,7 +105,9 @@ export default function Navbar() {
                   className="w-6 h-6 text-white dark:text-dark-background"
                 />
                 <span className="ml-2 text-white dark:text-dark-background whitespace-nowrap overflow-hidden grow md:max-w-0 group-hover:max-w-[200px] group-hover:p-2 transition-all duration-300 ease-in-out  overflow-ellipsis">
-                  {item.name}
+                  {item.name === 'Sair' && isLoggingOut
+                    ? 'Saindo...'
+                    : item.name}
                 </span>
               </div>
             </span>

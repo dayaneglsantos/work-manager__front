@@ -20,7 +20,7 @@ const tasksData = [
 export default function Home() {
   return (
     <>
-      <Card className="mb-3 w-full">
+      {/* <Card className="mb-3 w-full">
         <Carousel />
       </Card>
       <div className="flex flex-wrap gap-3">
@@ -69,7 +69,7 @@ export default function Home() {
             <Calendar />
           </Card>
         </div>
-      </div>
+      </div> */}
     </>
   )
 }

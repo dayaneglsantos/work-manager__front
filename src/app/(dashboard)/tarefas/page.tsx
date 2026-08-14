@@ -24,18 +24,20 @@ export default function Page() {
   console.log(data)
 
   return (
-    <Card className="w-full max-w-[calc(100vw-48px)] md:max-w-[calc(100vw-112px)]">
-      <Tabs
-        list={[
-          { value: 'all', label: 'Todas' },
-          { value: 'completed', label: 'Concluídas' },
-          { value: 'in-progress', label: 'Em Progresso' },
-          { value: 'paused', label: 'Pausadas' }
-        ]}
-        setSelectedTab={setSelectedTab}
-        selectedTab={selectedTab}
-      />
-      <TasksPage />
-    </Card>
+    <>
+      {/* <Card className="w-full max-w-[calc(100vw-48px)] md:max-w-[calc(100vw-112px)]">
+        <Tabs
+          list={[
+            { value: 'all', label: 'Todas' },
+            { value: 'completed', label: 'Concluídas' },
+            { value: 'in-progress', label: 'Em Progresso' },
+            { value: 'paused', label: 'Pausadas' }
+          ]}
+          setSelectedTab={setSelectedTab}
+          selectedTab={selectedTab}
+        />
+        <TasksPage />
+      </Card> */}
+    </>
   )
 }

@@ -33,7 +33,7 @@ describe('Login page', () => {
 
     expect(await screen.findByText('E-mail inválido')).toBeInTheDocument()
     expect(
-      screen.getByText('Senha deve ter no mínimo 6 caracteres')
+      screen.getByText('Senha deve ter no mínimo 8 caracteres')
     ).toBeInTheDocument()
     expect(login).not.toHaveBeenCalled()
   })

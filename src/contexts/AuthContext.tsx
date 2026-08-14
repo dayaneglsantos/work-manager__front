@@ -9,14 +9,16 @@ import {
   useContext,
   useEffect,
   useCallback,
+  useRef,
   useState
 } from 'react'
 
 type AuthContextType = {
   session: SessionType | null
   loading: boolean
+  isLoggingOut: boolean
   saveSession: (newSession: SessionType) => void
-  clearSession: () => void
+  clearSession: () => Promise<void>
   clearLocalSession: () => void
 }
 
@@ -25,6 +27,8 @@ const AuthContext = createContext<AuthContextType | null>(null)
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<SessionType | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const loggingOutRef = useRef(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -46,14 +50,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [])
 
   const clearSession = async () => {
-    await api.post('/logout')
-    clearLocalSession()
-    router.push('/login')
+    if (loggingOutRef.current) return
+
+    loggingOutRef.current = true
+    setIsLoggingOut(true)
+
+    try {
+      await api.post('/logout')
+    } catch {
+      // A falha da API não deve impedir o logout local.
+    } finally {
+      clearLocalSession()
+      router.push('/login')
+      loggingOutRef.current = false
+      setIsLoggingOut(false)
+    }
   }
 
   return (
     <AuthContext.Provider
-      value={{ session, saveSession, clearSession, clearLocalSession, loading }}
+      value={{
+        session,
+        saveSession,
+        clearSession,
+        clearLocalSession,
+        loading,
+        isLoggingOut
+      }}
     >
       {children}
     </AuthContext.Provider>

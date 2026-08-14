@@ -15,10 +15,15 @@ body {
 }
 
 @theme {
-  --color-dark-background: #07000d;
+  --color-dark-background: #0d0914;
   --color-light-background: #ededed;
 
   --color-dark: #181c14;
+  --color-dark-surface: #171222;
+  --color-dark-surface-hover: #211a30;
+  --color-dark-border: #312641;
+  --color-dark-text: #f5f1fa;
+  --color-dark-muted: #b7afc7;
 
   --color-primary: #725cad;
   --color-primary-light: #9b7ebd;

@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useState } from 'react'
 
 interface InputFieldProps {
+  title?: string
   type: 'password' | 'text'
   placeholder: string
   value: any
@@ -15,6 +16,7 @@ interface InputFieldProps {
 }
 
 export default function InputField({
+  title,
   type,
   placeholder,
   value,
@@ -40,6 +42,11 @@ export default function InputField({
 
   return (
     <div className="flex flex-col grow mb-3">
+      {title && (
+        <label className="text-start font-medium text-gray-700 dark:text-gray-300">
+          {title}
+        </label>
+      )}
       <div
         className={`relative p-3 rounded-[8px] w-full mt-3 ${appearanceClasses}`}
       >

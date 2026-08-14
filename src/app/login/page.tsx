@@ -78,8 +78,9 @@ export default function Login() {
           <h1 className="mb-6 text-3xl">Faça login na plataforma</h1>
           <div className="mx-auto mb-3 flex max-w-md flex-col justify-center p-3 text-black">
             <InputField
+              title="E-mail"
               type="text"
-              placeholder="E-mail"
+              placeholder="Digite seu e-mail"
               value={formValues.email}
               onChange={(event) => {
                 setInvalidCredentials(false)
@@ -90,8 +91,9 @@ export default function Login() {
               forceLightAppearance
             />
             <InputField
+              title="Senha"
               type="password"
-              placeholder="Senha"
+              placeholder="Digite sua senha"
               value={formValues.password}
               onChange={(event) => {
                 setInvalidCredentials(false)
@@ -104,7 +106,8 @@ export default function Login() {
             <Button
               title={isSubmitting ? 'Entrando...' : 'Entrar'}
               disabled={isSubmitting}
-              className="mt-4 w-52 self-center font-bold"
+              size="lg"
+              className="mt-4 font-bold"
             />
           </div>
           <Link

@@ -22,7 +22,7 @@ export default function CommonLayout({
         <div className="flex min-h-screen text-foreground relative">
           <main className="flex w-full h-full">
             <Navbar />
-            <div className="flex-1 md:pl-16">
+            <div className="flex-1 md:pl-[68px]">
               <Header />
               {/* Main Content */}
               <div className="p-6 flex flex-col items-center ">

@@ -1,61 +1,44 @@
 'use client'
 
-import { FilterListType } from '@/types/filterListType'
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useEffect, useState } from 'react'
+
+interface SearchFieldProps {
+  value?: string
+  defaultValue?: string
+  onChange: (value: string) => void
+  placeholder?: string
+  label?: string
+  className?: string
+}
 
 export default function SearchField({
-  item,
-  setFilters,
-  setFiltersApplied
-}: {
-  item: FilterListType
-  setFilters: React.Dispatch<React.SetStateAction<any>>
-  setFiltersApplied: React.Dispatch<React.SetStateAction<boolean>>
-}) {
-  const [focused, setFocused] = useState(false)
-  const [debouncedValue, setDebouncedValue] = useState('')
-
-  const handleChange = (value: string) => {
-    setDebouncedValue(value)
-
-    setFiltersApplied(true)
-  }
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setFilters((prev: any) => [
-        ...prev.filter((filter: any) => filter.name !== item.name),
-        {
-          name: item.name,
-          value: debouncedValue
-        }
-      ])
-    }, 500)
-
-    return () => clearTimeout(timeout)
-  }, [debouncedValue, item.name, setFilters])
-
+  value,
+  defaultValue,
+  onChange,
+  placeholder = 'Buscar',
+  label = 'Buscar',
+  className
+}: SearchFieldProps) {
   return (
-    <div
-      style={{
-        minWidth: '300px',
-        width: item?.width ? `${item.width}px` : '100%',
-        height: item?.height || 40
-      }}
-      className={`w-full sm:w-auto flex items-center justify-between border-gray-400 border rounded-md p-1.5 flex-grow md:flex-grow-0 ${focused ? 'bg-gray-100 dark:bg-gray-800' : ''}
-    ${item?.className}`}
+    <label
+      className={`flex min-h-10 w-full items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 text-gray-600 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15 dark:border-dark-border dark:bg-dark-surface dark:text-dark-muted dark:focus-within:border-primary-light ${className ?? ''}`}
     >
-      <input
-        type="text"
-        placeholder={item?.placeholder}
-        className="w-full outline-none"
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        onChange={(e) => handleChange(e.target.value)}
+      <span className="sr-only">{label}</span>
+      <FontAwesomeIcon
+        icon={faMagnifyingGlass}
+        aria-hidden="true"
+        className="h-4 w-4 shrink-0"
       />
-      <FontAwesomeIcon icon={faMagnifyingGlass} className="text-gray-500" />
-    </div>
+      <input
+        type="search"
+        value={value}
+        defaultValue={defaultValue}
+        placeholder={placeholder}
+        autoComplete="off"
+        className="min-w-0 flex-1 bg-transparent py-2 text-sm text-primary-dark outline-none placeholder:text-gray-400 dark:text-dark-text dark:placeholder:text-dark-muted/70"
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </label>
   )
 }

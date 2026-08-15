@@ -2,7 +2,7 @@
 
 import { TaskType } from '@/types/taskType'
 import { useEffect, useRef, useState } from 'react'
-import Badge from './Badge'
+import Badge, { type BadgeVariant } from './Badge'
 import { updateTask } from '@/services/task/taskServices'
 import handleEscKey from '@/utils/handleEscKey'
 
@@ -11,7 +11,7 @@ interface StatusSelectorProps {
   statusList: {
     label: string
     value: string
-    color: string
+    variant: BadgeVariant
   }[]
   updateList?: () => void
 }
@@ -29,33 +29,33 @@ export default function StatusSelector({
     status: string
   ): {
     label: string
-    color: 'info' | 'success' | 'warning' | 'default' | 'error'
+    variant: BadgeVariant
   } => {
     switch (status) {
       case 'paused':
         return {
           label: 'Pausada',
-          color: 'warning'
+          variant: 'warning'
         }
       case 'inProgress':
         return {
           label: 'Em progresso',
-          color: 'info'
+          variant: 'info'
         }
       case 'done':
         return {
           label: 'Concluída',
-          color: 'success'
+          variant: 'success'
         }
       case 'todo':
         return {
           label: 'A Fazer',
-          color: 'default'
+          variant: 'default'
         }
       default:
         return {
           label: 'Desconhecido',
-          color: 'default'
+          variant: 'default'
         }
     }
   }
@@ -120,7 +120,7 @@ export default function StatusSelector({
     <div className="relative" ref={dropdownRef}>
       <Badge
         name={statusFormat(task.status)?.label}
-        color={statusFormat(task.status)?.color}
+        variant={statusFormat(task.status)?.variant}
         fullWidth
         onClick={(e) => handleClick(e)}
         className="cursor-pointer"
@@ -136,7 +136,7 @@ export default function StatusSelector({
               <Badge
                 key={i.value}
                 name={i.label}
-                color={i.color as any}
+                variant={i.variant}
                 fullWidth
                 className="cursor-pointer block h-5"
                 onClick={(e) => {

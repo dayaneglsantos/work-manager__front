@@ -102,7 +102,7 @@ export default function Navbar() {
             return (
               <button
                 type="button"
-                className={`group relative z-10 flex h-11 w-full cursor-pointer items-center overflow-hidden rounded-xl px-3 transition-all duration-300 md:w-fit md:max-w-11 md:self-start md:hover:max-w-40 ${index === menuList.length - 1 ? 'mt-auto' : ''} ${isActive ? 'bg-primary text-white shadow-sm shadow-primary/20' : 'text-primary-dark hover:bg-purple-50 hover:text-primary dark:text-dark-muted dark:hover:bg-dark-surface-hover dark:hover:text-purple-200'} ${isLogout && isLoggingOut ? 'pointer-events-none opacity-50' : ''}`}
+                className={`group relative z-10 flex h-11 w-full cursor-pointer items-center overflow-hidden rounded-xl px-3 transition-all duration-300 md:w-fit md:max-w-11 md:self-start md:hover:max-w-40 ${index === menuList.length - 1 ? 'mt-auto' : ''} ${isActive ? 'bg-primary text-white shadow-sm shadow-primary/20' : 'text-primary hover:bg-purple-50 dark:text-purple-200 dark:hover:bg-dark-surface-hover'} ${isLogout && isLoggingOut ? 'pointer-events-none opacity-50' : ''}`}
                 key={item.name}
                 aria-current={isActive ? 'page' : undefined}
                 aria-disabled={isLogout && isLoggingOut}

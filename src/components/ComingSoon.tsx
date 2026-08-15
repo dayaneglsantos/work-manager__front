@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import comingSoonImage from '@/assets/images/coming-soon.png'
 import Card from './Card'
+import Badge from './Badge'
 
 interface ComingSoonProps {
   title: string
@@ -19,9 +20,11 @@ export default function ComingSoon({ title }: ComingSoonProps) {
           className="relative mx-auto h-auto w-48 sm:w-56"
         />
 
-        <span className="relative mt-5 inline-flex rounded-full border border-primary-light/30 bg-primary-light/10 px-3 py-1 text-xs font-medium tracking-wide text-primary-dark dark:border-primary-light/20 dark:bg-primary-light/10 dark:text-purple-200">
-          Novidade em construção
-        </span>
+        <Badge
+          name="Novidade em construção"
+          variant="default"
+          className="relative mt-5 tracking-wide"
+        />
 
         <h1 className="relative mt-4 text-2xl font-bold text-primary-dark dark:text-dark-text">
           {title}

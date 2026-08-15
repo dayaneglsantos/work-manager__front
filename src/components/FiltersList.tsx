@@ -34,9 +34,20 @@ export default function FiltersList({
           )}
           {item.type === 'search' && (
             <SearchField
-              item={item}
-              setFilters={setFilters}
-              setFiltersApplied={setFiltersApplied}
+              defaultValue={
+                typeof item.value === 'string' ? item.value : undefined
+              }
+              placeholder={item.placeholder}
+              className={item.className}
+              onChange={(value) => {
+                setFiltersApplied(true)
+                setFilters((previousFilters: any[]) => [
+                  ...previousFilters.filter(
+                    (filter) => filter.name !== item.name
+                  ),
+                  { name: item.name, value }
+                ])
+              }}
             />
           )}
         </div>

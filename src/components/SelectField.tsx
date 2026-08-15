@@ -6,14 +6,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useEffect, useRef, useState } from 'react'
 import Avatar from './Avatar'
 
-interface Option {
+export interface SelectOption {
   label: string
   value: string | number
   avatar?: string
 }
 
 export interface SelectFieldProps {
-  options: Option[]
+  options: SelectOption[]
   setFilters?: React.Dispatch<React.SetStateAction<any>>
   multiple?: boolean
   value?: string | string[] | number | number[]
@@ -42,9 +42,10 @@ export default function SelectField({
   setFiltersApplied
 }: SelectFieldProps) {
   const [open, setOpen] = useState(false)
-  const [selectedList, setSelectedList] = useState<Option[]>([])
+  const [selectedList, setSelectedList] = useState<SelectOption[]>([])
   const selectRef = useRef<HTMLDivElement>(null)
   const [optionsPosition, setOptionsPosition] = useState<'up' | 'down'>('down')
+  const optionsKey = options.map((option) => option.value).join('|')
 
   const calculatePosition = () => {
     if (selectRef.current) {
@@ -64,43 +65,43 @@ export default function SelectField({
       ? 'bottom-full mb-1 left-0'
       : 'top-full mt-0.5 left-0'
 
-  const handleSelect = (selected: Option) => {
-    if (multiple) {
-      setSelectedList((prev) => {
-        if (prev.some((item) => item.value === selected.value)) {
-          return prev.filter((item) => item.value !== selected.value)
-        } else {
-          return [...prev, selected]
-        }
-      })
-    } else {
-      setSelectedList([selected])
-      setOpen(false)
-    }
+  const notifySelectionChange = (nextSelection: SelectOption[]) => {
     if (filter && setFiltersApplied) {
       setFiltersApplied(true)
     }
-  }
-
-  useEffect(() => {
     if (filter && setFilters) {
       setFilters((prev: any) => [
         ...prev.filter((filter: any) => filter.name !== name),
         {
           name,
           value: multiple
-            ? selectedList.map((item) => item?.value)
-            : selectedList[0]?.value
+            ? nextSelection.map((item) => item.value)
+            : nextSelection[0]?.value
         }
       ])
     } else if (onChange) {
       onChange(
         multiple
-          ? selectedList.map((item: any) => item?.value)
-          : selectedList[0]?.value
+          ? nextSelection.map((item) => item.value)
+          : nextSelection[0]?.value
       )
     }
-  }, [selectedList])
+  }
+
+  const handleSelect = (selected: SelectOption) => {
+    const nextSelection = multiple
+      ? selectedList.some((item) => item.value === selected.value)
+        ? selectedList.filter((item) => item.value !== selected.value)
+        : [...selectedList, selected]
+      : [selected]
+
+    setSelectedList(nextSelection)
+    notifySelectionChange(nextSelection)
+
+    if (!multiple) {
+      setOpen(false)
+    }
+  }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -126,18 +127,18 @@ export default function SelectField({
   }, [])
 
   useEffect(() => {
-    if (value) {
+    if (value !== undefined) {
       const selectedValues = Array.isArray(value) ? value : [value]
       const newSelectedList = options.filter((option) =>
         selectedValues.includes(option.value)
       )
       setSelectedList(newSelectedList)
     }
-  }, [value])
+  }, [optionsKey, value])
 
   return (
     <div
-      className={`relative flex-grow md:flex-grow-0 ${className}`}
+      className={`relative min-w-0 ${className ?? ''}`}
       ref={selectRef}
     >
       <div
@@ -146,7 +147,11 @@ export default function SelectField({
           width: width ? `${width}px` : '100%',
           height: height || 40
         }}
-        className={`w-full flex items-center justify-between border border-gray-400 rounded-md p-2 cursor-pointer`}
+        className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border bg-white px-3 text-sm text-primary-dark transition-colors dark:bg-dark-surface dark:text-dark-text ${
+          open
+            ? 'border-primary ring-2 ring-primary/15 dark:border-primary-light'
+            : 'border-gray-200 hover:border-primary/40 dark:border-dark-border dark:hover:border-primary-light/40'
+        }`}
         onClick={() => {
           setOpen(!open)
           calculatePosition()
@@ -157,22 +162,24 @@ export default function SelectField({
             {selectedList.map((item) => item.label).join(', ')}
           </span>
         ) : (
-          <span className="text-gray-500">{placeholder}</span>
+          <span className="truncate text-gray-400 dark:text-dark-muted/70">
+            {placeholder}
+          </span>
         )}
         <FontAwesomeIcon
           icon={open ? faCaretUp : faCaretDown}
-          className="text-gray-500"
+          className="h-4 w-4 shrink-0 text-gray-500 dark:text-dark-muted"
         />
       </div>
       {open && (
         <div
-          className={`absolute z-10 bg-gray-200 dark:bg-gray-700 w-full max-h-[600px] overflow-y-auto rounded-md ${optionsClasses}`}
+          className={`absolute z-20 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white p-1 shadow-xl shadow-primary-dark/10 dark:border-dark-border dark:bg-dark-surface dark:shadow-black/30 ${optionsClasses}`}
         >
           {options.length > 0 ? (
-            options?.map((option: Option) => (
+            options?.map((option: SelectOption) => (
               <div
                 key={option.value}
-                className="p-2 shadow-gray-400 hover:bg-gray-300 dark:hover:bg-gray-800 rounded-md cursor-pointer"
+                className="cursor-pointer rounded-lg p-2 text-sm text-primary-dark transition-colors hover:bg-purple-50 dark:text-dark-text dark:hover:bg-dark-surface-hover"
                 onClick={() => handleSelect(option)}
               >
                 {multiple && (
@@ -194,7 +201,7 @@ export default function SelectField({
               </div>
             ))
           ) : (
-            <div className="p-2 shadow-gray-400 hover:bg-gray-200 dark:hover:bg-primary-hover rounded-md cursor-pointer">
+            <div className="p-2 text-sm text-gray-500 dark:text-dark-muted">
               Sem opções disponíveis
             </div>
           )}

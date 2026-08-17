@@ -1,8 +1,6 @@
 import handleEscKey from '@/utils/handleEscKey'
-import { formatDate, isValid, parse, set } from 'date-fns'
-import { ptBR, se } from 'date-fns/locale'
-import { on } from 'events'
-import { format } from 'path'
+import { format, formatDate, isValid, parse } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import { useEffect, useRef, useState } from 'react'
 import { DayPicker } from 'react-day-picker'
 import { IMaskInput } from 'react-imask'
@@ -47,7 +45,7 @@ export default function DateInput({
   // Atualiza o valor exibido quando a prop value muda
   useEffect(() => {
     if (value) {
-      const date = new Date(value)
+      const date = parse(value, 'yyyy-MM-dd', new Date())
       if (isValid(date)) {
         setDisplayValue(formatDate(date, 'dd/MM/yyyy', { locale: ptBR }))
       } else {
@@ -88,7 +86,7 @@ export default function DateInput({
     setDisplayValue(value)
     const parsedDate = parse(value, 'dd/MM/yyyy', new Date())
     if (isValid(parsedDate)) {
-      setDate(parsedDate.toISOString())
+      setDate(format(parsedDate, 'yyyy-MM-dd'))
     }
   }
 
@@ -96,7 +94,7 @@ export default function DateInput({
   // Manipula a seleção de um dia no calendário
   const handleDaySelect = (day: Date) => {
     if (isValid(day)) {
-      setDate(day.toISOString())
+      setDate(format(day, 'yyyy-MM-dd'))
       setDisplayValue(formatDate(day, 'dd/MM/yyyy', { locale: ptBR }))
     }
     setShowCalendar(false)
@@ -104,7 +102,9 @@ export default function DateInput({
 
   // ------------------------------------------------------------------------------------------------
 
-  const selectedDate = value ? new Date(value) : undefined
+  const selectedDate = value
+    ? parse(value, 'yyyy-MM-dd', new Date())
+    : undefined
 
   // Determina as classes de posicionamento dinamicamente
   const calendarClasses =

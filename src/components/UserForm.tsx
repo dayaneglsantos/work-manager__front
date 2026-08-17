@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { getDepartments } from '@/services/departmentServices'
 import { getProfiles } from '@/services/profileServices'
 import { getUsers } from '@/services/userServices'
+import { isValidCpf, normalizeCpf } from '@/utils/cpf'
 import {
   CreateUserPayload,
   UpdateUserPayload,
@@ -15,7 +16,8 @@ import {
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import Button from './Button'
-import Checkbox from './Checkbox'
+import CpfField from './CpfField'
+import CurrencyField from './CurrencyField'
 import FormField from './FormField'
 import FormSelectField from './FormSelectField'
 import TextareaField from './TextareaField'
@@ -31,6 +33,7 @@ const optionalUrl = z
 const baseUserFormSchema = z.object({
   name: z.string().trim().min(1, 'Informe o nome'),
   email: z.string().trim().email('Informe um e-mail válido'),
+  cpf: z.string().refine(isValidCpf, 'Informe um CPF válido'),
   phoneNumber: z.string().trim().min(1, 'Informe o telefone'),
   birthDate: z.string(),
   profileImage: optionalUrl,
@@ -42,16 +45,10 @@ const baseUserFormSchema = z.object({
     .nonnegative('O salário não pode ser negativo'),
   admissionDate: z.string().min(1, 'Informe a data de admissão'),
   currentPosition: z.string().trim().min(1, 'Informe o cargo'),
-  employmentStatus: z.enum([
-    'active',
-    'inactive',
-    'terminated',
-    'resigned'
-  ]),
+  employmentStatus: z.enum(['active', 'inactive', 'terminated', 'resigned']),
   statusReason: z.string(),
   notes: z.string(),
   password: z.string(),
-  includeAddress: z.boolean(),
   address: z.object({
     zipCode: z.string(),
     state: z.string(),
@@ -80,12 +77,16 @@ const createUserFormSchema = (mode: 'create' | 'edit') =>
       })
     }
 
-    if (values.includeAddress) {
+    const hasAddressValues = Object.values(values.address).some((value) =>
+      value.trim()
+    )
+
+    if (hasAddressValues) {
       const requiredAddressFields = [
         ['zipCode', 'Informe o CEP'],
         ['state', 'Informe o estado'],
         ['city', 'Informe a cidade'],
-        ['street', 'Informe a rua'],
+        ['street', 'Informe o logradouro'],
         ['number', 'Informe o número']
       ] as const
 
@@ -128,12 +129,10 @@ type UserFormProps =
 
 const toDateInputValue = (value?: string) => value?.slice(0, 10) ?? ''
 
-const toIsoDate = (value: string) =>
-  new Date(`${value}T00:00:00`).toISOString()
-
 const getDefaultValues = (user?: UserType): UserFormValues => ({
   name: user?.name ?? '',
   email: user?.email ?? '',
+  cpf: normalizeCpf(user?.cpf ?? ''),
   phoneNumber: user?.phoneNumber ?? '',
   birthDate: toDateInputValue(user?.birthDate),
   profileImage: user?.profileImage ?? '',
@@ -147,7 +146,6 @@ const getDefaultValues = (user?: UserType): UserFormValues => ({
   statusReason: user?.statusReason ?? '',
   notes: user?.notes ?? '',
   password: '',
-  includeAddress: Boolean(user?.address),
   address: {
     zipCode: user?.address?.zipCode ?? '',
     state: user?.address?.state ?? '',
@@ -184,7 +182,6 @@ export default function UserForm(props: UserFormProps) {
   })
 
   const employmentStatus = watch('employmentStatus')
-  const includeAddress = watch('includeAddress')
 
   useEffect(() => {
     reset(getDefaultValues(initialUser))
@@ -240,17 +237,22 @@ export default function UserForm(props: UserFormProps) {
   }, [initialUser?.id])
 
   const submitForm = async (values: UserFormValues) => {
+    const hasAddressValues = Object.values(values.address).some((value) =>
+      value.trim()
+    )
+
     const payload: UserPayload = {
       name: values.name.trim(),
       email: values.email.trim(),
+      cpf: normalizeCpf(values.cpf),
       phoneNumber: values.phoneNumber.trim(),
-      birthDate: values.birthDate ? toIsoDate(values.birthDate) : undefined,
+      birthDate: values.birthDate || undefined,
       profileImage: values.profileImage.trim() || undefined,
       profileId: values.profileId,
       supervisorId: values.supervisorId,
       departmentId: values.departmentId,
       currentSalary: values.currentSalary,
-      admissionDate: toIsoDate(values.admissionDate),
+      admissionDate: values.admissionDate,
       currentPosition: values.currentPosition.trim(),
       employmentStatus: values.employmentStatus,
       statusReason:
@@ -258,7 +260,7 @@ export default function UserForm(props: UserFormProps) {
           ? values.statusReason.trim()
           : null,
       notes: values.notes.trim() || undefined,
-      ...(values.includeAddress && {
+      ...(hasAddressValues && {
         address: {
           zipCode: values.address.zipCode.trim(),
           state: values.address.state.trim(),
@@ -283,193 +285,225 @@ export default function UserForm(props: UserFormProps) {
 
   const sectionClasses =
     'rounded-2xl border border-gray-200 bg-white p-5 dark:border-dark-border dark:bg-dark-surface'
+  const sectionTitleClasses =
+    'mb-2 text-lg ml-4 font-bold text-primary-dark dark:text-dark-text'
 
   return (
-    <form onSubmit={handleSubmit(submitForm)} className="space-y-5">
-      <fieldset className={sectionClasses}>
-        <legend className="px-2 text-lg font-bold text-primary-dark dark:text-dark-text">
+    <form
+      onSubmit={handleSubmit(submitForm)}
+      autoComplete="off"
+      className="space-y-5"
+    >
+      <section aria-labelledby="personal-data-title">
+        <h2 id="personal-data-title" className={sectionTitleClasses}>
           Dados pessoais
-        </legend>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <FormField
-            label="Nome"
-            placeholder="Nome completo"
-            error={errors.name?.message}
-            {...register('name')}
-          />
-          <FormField
-            label="E-mail"
-            type="email"
-            placeholder="nome@empresa.com"
-            error={errors.email?.message}
-            {...register('email')}
-          />
-          <FormField
-            label="Telefone"
-            type="tel"
-            placeholder="(00) 00000-0000"
-            error={errors.phoneNumber?.message}
-            {...register('phoneNumber')}
-          />
-          <FormField
-            label="Data de nascimento"
-            type="date"
-            error={errors.birthDate?.message}
-            {...register('birthDate')}
-          />
-          <FormField
-            label="Imagem de perfil"
-            type="url"
-            placeholder="https://exemplo.com/imagem.jpg"
-            error={errors.profileImage?.message}
-            className="md:col-span-2"
-            {...register('profileImage')}
-          />
-        </div>
-      </fieldset>
-
-      <fieldset className={sectionClasses}>
-        <legend className="px-2 text-lg font-bold text-primary-dark dark:text-dark-text">
-          Dados profissionais
-        </legend>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <FormField
-            label="Cargo"
-            placeholder="Cargo atual"
-            error={errors.currentPosition?.message}
-            {...register('currentPosition')}
-          />
-          <FormField
-            label="Salário atual"
-            type="number"
-            min="0"
-            step="0.01"
-            error={errors.currentSalary?.message}
-            {...register('currentSalary', { valueAsNumber: true })}
-          />
-          <FormField
-            label="Data de admissão"
-            type="date"
-            error={errors.admissionDate?.message}
-            {...register('admissionDate')}
-          />
-          <Controller
-            name="profileId"
-            control={control}
-            render={({ field }) => (
-              <FormSelectField
-                label="Perfil"
-                options={profileOptions}
-                value={field.value}
-                onChange={(value) => field.onChange(value)}
-                placeholder="Selecione um perfil"
-                error={errors.profileId?.message}
-              />
-            )}
-          />
-          <Controller
-            name="departmentId"
-            control={control}
-            render={({ field }) => (
-              <FormSelectField
-                label="Departamento"
-                options={[
-                  { label: 'Sem departamento', value: '' },
-                  ...departmentOptions
-                ]}
-                value={field.value ?? ''}
-                onChange={(value) => field.onChange(value || null)}
-                placeholder="Selecione um departamento"
-                error={errors.departmentId?.message}
-              />
-            )}
-          />
-          <Controller
-            name="supervisorId"
-            control={control}
-            render={({ field }) => (
-              <FormSelectField
-                label="Supervisor"
-                options={supervisorOptions}
-                value={field.value ?? ''}
-                onChange={(value) => field.onChange(value || null)}
-                placeholder="Selecione um supervisor"
-                error={errors.supervisorId?.message}
-              />
-            )}
-          />
-          <Controller
-            name="employmentStatus"
-            control={control}
-            render={({ field }) => (
-              <FormSelectField
-                label="Situação do vínculo"
-                options={[
-                  { label: 'Ativo', value: 'active' },
-                  { label: 'Inativo', value: 'inactive' },
-                  { label: 'Desligado', value: 'terminated' },
-                  { label: 'Demissionário', value: 'resigned' }
-                ]}
-                value={field.value}
-                onChange={(value) => field.onChange(value)}
-                error={errors.employmentStatus?.message}
-              />
-            )}
-          />
-          {employmentStatus === 'inactive' && (
-            <TextareaField
-              label="Motivo da inativação"
-              placeholder="Informe o motivo"
-              error={errors.statusReason?.message}
+        </h2>
+        <div className={sectionClasses}>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <FormField
+              label="Nome"
+              required
+              placeholder="Nome completo"
+              error={errors.name?.message}
+              {...register('name')}
+            />
+            <FormField
+              label="E-mail"
+              type="email"
+              required
+              autoComplete="off"
+              placeholder="nome@empresa.com"
+              error={errors.email?.message}
+              {...register('email')}
+            />
+            <Controller
+              name="cpf"
+              control={control}
+              render={({ field }) => (
+                <CpfField
+                  required
+                  name={field.name}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={errors.cpf?.message}
+                />
+              )}
+            />
+            <FormField
+              label="Telefone"
+              type="tel"
+              required
+              placeholder="(00) 00000-0000"
+              error={errors.phoneNumber?.message}
+              {...register('phoneNumber')}
+            />
+            <FormField
+              label="Data de nascimento"
+              type="date"
+              error={errors.birthDate?.message}
+              {...register('birthDate')}
+            />
+            <FormField
+              label="Imagem de perfil"
+              type="url"
+              placeholder="https://exemplo.com/imagem.jpg"
+              error={errors.profileImage?.message}
               className="md:col-span-2"
-              {...register('statusReason')}
+              {...register('profileImage')}
             />
-          )}
-          <TextareaField
-            label="Observações"
-            placeholder="Informações adicionais"
-            error={errors.notes?.message}
-            className="md:col-span-2"
-            {...register('notes')}
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="professional-data-title">
+        <h2 id="professional-data-title" className={sectionTitleClasses}>
+          Dados profissionais
+        </h2>
+        <div className={sectionClasses}>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <FormField
+              label="Cargo"
+              required
+              placeholder="Cargo atual"
+              error={errors.currentPosition?.message}
+              {...register('currentPosition')}
+            />
+            <Controller
+              name="currentSalary"
+              control={control}
+              render={({ field }) => (
+                <CurrencyField
+                  label="Salário atual"
+                  required
+                  name={field.name}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={errors.currentSalary?.message}
+                />
+              )}
+            />
+            <FormField
+              label="Data de admissão"
+              type="date"
+              required
+              error={errors.admissionDate?.message}
+              {...register('admissionDate')}
+            />
+            <Controller
+              name="profileId"
+              control={control}
+              render={({ field }) => (
+                <FormSelectField
+                  label="Perfil"
+                  required
+                  options={profileOptions}
+                  value={field.value}
+                  onChange={(value) => field.onChange(value)}
+                  placeholder="Selecione um perfil"
+                  error={errors.profileId?.message}
+                />
+              )}
+            />
+            <Controller
+              name="departmentId"
+              control={control}
+              render={({ field }) => (
+                <FormSelectField
+                  label="Departamento"
+                  options={[
+                    { label: 'Sem departamento', value: '' },
+                    ...departmentOptions
+                  ]}
+                  value={field.value ?? ''}
+                  onChange={(value) => field.onChange(value || null)}
+                  placeholder="Selecione um departamento"
+                  error={errors.departmentId?.message}
+                />
+              )}
+            />
+            <Controller
+              name="supervisorId"
+              control={control}
+              render={({ field }) => (
+                <FormSelectField
+                  label="Supervisor"
+                  options={supervisorOptions}
+                  value={field.value ?? ''}
+                  onChange={(value) => field.onChange(value || null)}
+                  placeholder="Selecione um supervisor"
+                  error={errors.supervisorId?.message}
+                />
+              )}
+            />
+            <Controller
+              name="employmentStatus"
+              control={control}
+              render={({ field }) => (
+                <FormSelectField
+                  label="Situação do vínculo"
+                  required
+                  options={[
+                    { label: 'Ativo', value: 'active' },
+                    { label: 'Inativo', value: 'inactive' },
+                    { label: 'Desligado', value: 'terminated' },
+                    { label: 'Demissionário', value: 'resigned' }
+                  ]}
+                  value={field.value}
+                  onChange={(value) => field.onChange(value)}
+                  error={errors.employmentStatus?.message}
+                />
+              )}
+            />
+            {employmentStatus === 'inactive' && (
+              <TextareaField
+                label="Motivo da inativação"
+                required
+                placeholder="Informe o motivo"
+                error={errors.statusReason?.message}
+                className="md:col-span-2"
+                {...register('statusReason')}
+              />
+            )}
+            <TextareaField
+              label="Observações"
+              placeholder="Informações adicionais"
+              error={errors.notes?.message}
+              className="md:col-span-2"
+              {...register('notes')}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="access-data-title">
+        <h2 id="access-data-title" className={sectionTitleClasses}>
+          Acesso
+        </h2>
+        <div className={sectionClasses}>
+          <FormField
+            label={mode === 'create' ? 'Senha' : 'Nova senha'}
+            type="password"
+            required={mode === 'create'}
+            autoComplete="new-password"
+            placeholder={
+              mode === 'create'
+                ? 'Defina a senha inicial'
+                : 'Deixe em branco para manter a senha atual'
+            }
+            error={errors.password?.message}
+            {...register('password')}
           />
         </div>
-      </fieldset>
+      </section>
 
-      <fieldset className={sectionClasses}>
-        <legend className="px-2 text-lg font-bold text-primary-dark dark:text-dark-text">
-          Acesso
-        </legend>
-        <FormField
-          label={mode === 'create' ? 'Senha' : 'Nova senha'}
-          type="password"
-          placeholder={
-            mode === 'create'
-              ? 'Defina a senha inicial'
-              : 'Deixe em branco para manter a senha atual'
-          }
-          error={errors.password?.message}
-          {...register('password')}
-        />
-      </fieldset>
-
-      <fieldset className={sectionClasses}>
-        <legend className="px-2 text-lg font-bold text-primary-dark dark:text-dark-text">
+      <section aria-labelledby="address-title">
+        <h2 id="address-title" className={sectionTitleClasses}>
           Endereço
-        </legend>
-        <Controller
-          name="includeAddress"
-          control={control}
-          render={({ field }) => (
-            <Checkbox
-              label="Incluir endereço"
-              checked={field.value}
-              onChange={field.onChange}
-            />
-          )}
-        />
-
-        {includeAddress && (
-          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+        </h2>
+        <div className={sectionClasses}>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <FormField
               label="CEP"
               placeholder="00000-000"
@@ -507,8 +541,8 @@ export default function UserForm(props: UserFormProps) {
               {...register('address.complement')}
             />
           </div>
-        )}
-      </fieldset>
+        </div>
+      </section>
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <Button

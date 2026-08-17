@@ -3,7 +3,7 @@
 import handleEscKey from '@/utils/handleEscKey'
 import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import Avatar from './Avatar'
 
 export interface SelectOption {
@@ -16,8 +16,8 @@ export interface SelectFieldProps {
   options: SelectOption[]
   setFilters?: React.Dispatch<React.SetStateAction<any>>
   multiple?: boolean
-  value?: string | string[] | number | number[]
-  onChange?: (value: string | string[] | number | number[]) => void
+  value?: string | number | Array<string | number>
+  onChange?: (value: string | number | Array<string | number>) => void
   placeholder?: string
   filter?: boolean
   name?: string
@@ -25,6 +25,7 @@ export interface SelectFieldProps {
   width?: number
   height?: number
   setFiltersApplied?: React.Dispatch<React.SetStateAction<boolean>>
+  required?: boolean
 }
 
 export default function SelectField({
@@ -39,11 +40,13 @@ export default function SelectField({
   className,
   width,
   height,
-  setFiltersApplied
+  setFiltersApplied,
+  required
 }: SelectFieldProps) {
   const [open, setOpen] = useState(false)
   const [selectedList, setSelectedList] = useState<SelectOption[]>([])
   const selectRef = useRef<HTMLDivElement>(null)
+  const listboxId = useId()
   const [optionsPosition, setOptionsPosition] = useState<'up' | 'down'>('down')
   const optionsKey = options.map((option) => option.value).join('|')
 
@@ -142,6 +145,11 @@ export default function SelectField({
       ref={selectRef}
     >
       <div
+        role="combobox"
+        aria-expanded={open}
+        aria-controls={listboxId}
+        aria-required={required}
+        tabIndex={0}
         style={{
           maxWidth: '100%',
           width: width ? `${width}px` : '100%',
@@ -173,6 +181,8 @@ export default function SelectField({
       </div>
       {open && (
         <div
+          id={listboxId}
+          role="listbox"
           className={`absolute z-20 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white p-1 shadow-xl shadow-primary-dark/10 dark:border-dark-border dark:bg-dark-surface dark:shadow-black/30 ${optionsClasses}`}
         >
           {options.length > 0 ? (

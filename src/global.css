@@ -6,6 +6,18 @@ body {
   height: 100vh;
 }
 
+/* Inputs numéricos não exibem controles nativos de incremento. */
+input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
 .dark {
   background: var(--color-dark-background);
 }

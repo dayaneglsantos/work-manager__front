@@ -32,6 +32,7 @@ export interface AddressType {
 export interface UserPayload {
   name: string
   email: string
+  cpf: string
   phoneNumber: string
   birthDate?: string
   profileImage?: string
@@ -59,6 +60,7 @@ export interface UserType {
   id: number
   name: string
   email: string
+  cpf?: string
   phoneNumber?: string
   birthDate?: string
   profileImage?: string

@@ -19,6 +19,11 @@ export default function TextareaField({
     <label htmlFor={fieldId} className={`block ${className ?? ''}`}>
       <span className="mb-1.5 block text-sm font-medium text-primary-dark dark:text-dark-text">
         {label}
+        {textareaProps.required && (
+          <span className="ml-1 text-error" aria-hidden="true">
+            *
+          </span>
+        )}
       </span>
       <textarea
         {...textareaProps}

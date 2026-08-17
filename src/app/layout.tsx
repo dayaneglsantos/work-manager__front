@@ -1,4 +1,5 @@
 import { AuthProvider } from '@/contexts/AuthContext'
+import NumberInputGuard from '@/components/NumberInputGuard'
 import ThemeProvider from '@/providers/ThemeProvider'
 import '@/global.css'
 import type { Metadata } from 'next'
@@ -24,6 +25,7 @@ export default function RootLayout({
   return (
     <html lang="pt-br" className={font.className} suppressHydrationWarning>
       <body>
+        <NumberInputGuard />
         <ThemeProvider>
           <AuthProvider>{children}</AuthProvider>
         </ThemeProvider>

@@ -1,6 +1,7 @@
 import { api } from '@/utils/axios'
 import {
   CreateUserPayload,
+  CreateUserResponse,
   EmploymentStatus,
   UpdateUserPayload,
   UserType,
@@ -51,8 +52,8 @@ export const getUserById = async (id: number): Promise<UserType> => {
 
 export const createUser = async (
   payload: CreateUserPayload
-): Promise<{ id: number }> => {
-  const { data } = await api.post<{ id: number }>('/users', payload)
+): Promise<CreateUserResponse> => {
+  const { data } = await api.post<CreateUserResponse>('/users', payload)
   return data
 }
 
@@ -61,5 +62,14 @@ export const updateUser = async (
   payload: UpdateUserPayload
 ): Promise<UserType> => {
   const { data } = await api.patch<UserType>(`/users/${id}`, payload)
+  return data
+}
+
+export const resendPasswordInvitation = async (
+  id: number
+): Promise<{ message: string }> => {
+  const { data } = await api.post<{ message: string }>(
+    `/users/${id}/password-invitation/resend`
+  )
   return data
 }

@@ -12,8 +12,16 @@ export default function Page() {
 
   const handleCreateUser = async (payload: CreateUserPayload) => {
     try {
-      await createUser(payload)
-      toast.success('Usuário cadastrado com sucesso')
+      const user = await createUser(payload)
+
+      if (user.invitationSent) {
+        toast.success('Usuário cadastrado e convite enviado com sucesso')
+      } else {
+        toast('Usuário cadastrado, mas o convite não pôde ser enviado', {
+          icon: '⚠️'
+        })
+      }
+
       router.push('/gestao/usuarios')
     } catch (error) {
       console.error(error)
@@ -40,8 +48,8 @@ export default function Page() {
           Cadastrar usuário
         </h1>
         <p className="mt-1 text-base leading-7 text-gray-600 dark:text-dark-muted">
-          Preencha os dados pessoais, profissionais e de acesso do novo
-          colaborador.
+          Preencha os dados pessoais e profissionais. O novo colaborador
+          receberá um convite por e-mail para criar sua senha.
         </p>
       </header>
 

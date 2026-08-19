@@ -48,16 +48,18 @@ export interface UserPayload {
   address?: AddressType
 }
 
-export interface CreateUserPayload extends UserPayload {
-  password: string
-}
+export type CreateUserPayload = UserPayload
 
-export type UpdateUserPayload = Partial<UserPayload> & {
-  password?: string
+export type UpdateUserPayload = Partial<UserPayload>
+
+export interface CreateUserResponse {
+  id: number
+  invitationSent: boolean
 }
 
 export interface UserType {
   id: number
+  hasPassword: boolean
   name: string
   email: string
   cpf?: string

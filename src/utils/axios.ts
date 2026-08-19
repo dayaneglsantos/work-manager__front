@@ -11,7 +11,9 @@ const publicAuthEndpoints = [
   '/logout',
   '/password-reset/request',
   '/password-reset/verify',
-  '/password-reset/confirm'
+  '/password-reset/confirm',
+  '/password-creation/verify',
+  '/password-creation/confirm'
 ]
 
 let isRedirectingToLogin = false

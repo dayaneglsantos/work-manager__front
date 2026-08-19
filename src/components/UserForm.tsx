@@ -48,7 +48,6 @@ const baseUserFormSchema = z.object({
   employmentStatus: z.enum(['active', 'inactive', 'terminated', 'resigned']),
   statusReason: z.string(),
   notes: z.string(),
-  password: z.string(),
   address: z.object({
     zipCode: z.string(),
     state: z.string(),
@@ -59,59 +58,53 @@ const baseUserFormSchema = z.object({
   })
 })
 
-const createUserFormSchema = (mode: 'create' | 'edit') =>
-  baseUserFormSchema.superRefine((values, context) => {
-    if (mode === 'create' && !values.password.trim()) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Informe uma senha',
-        path: ['password']
-      })
-    }
+// Redefine o esquema para adicionar validações condicionais
+const userFormSchema = baseUserFormSchema.superRefine((values, context) => {
+  // Validação condicional para o campo "statusReason" que deve ser preenchido se o "employmentStatus" for "inactive"
+  if (values.employmentStatus === 'inactive' && !values.statusReason.trim()) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Informe o motivo da inativação',
+      path: ['statusReason']
+    })
+  }
 
-    if (values.employmentStatus === 'inactive' && !values.statusReason.trim()) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Informe o motivo da inativação',
-        path: ['statusReason']
-      })
-    }
+  const hasAddressValues = Object.values(values.address).some((value) =>
+    value.trim()
+  )
 
-    const hasAddressValues = Object.values(values.address).some((value) =>
-      value.trim()
-    )
+  if (hasAddressValues) {
+    const requiredAddressFields = [
+      ['zipCode', 'Informe o CEP'],
+      ['state', 'Informe o estado'],
+      ['city', 'Informe a cidade'],
+      ['street', 'Informe o logradouro'],
+      ['number', 'Informe o número']
+    ] as const
 
-    if (hasAddressValues) {
-      const requiredAddressFields = [
-        ['zipCode', 'Informe o CEP'],
-        ['state', 'Informe o estado'],
-        ['city', 'Informe a cidade'],
-        ['street', 'Informe o logradouro'],
-        ['number', 'Informe o número']
-      ] as const
-
-      requiredAddressFields.forEach(([field, message]) => {
-        if (!values.address[field].trim()) {
-          context.addIssue({
-            code: z.ZodIssueCode.custom,
-            message,
-            path: ['address', field]
-          })
-        }
-      })
-
-      if (
-        values.address.number.trim() &&
-        !Number.isFinite(Number(values.address.number))
-      ) {
+    // Valida os campos de endereço obrigatórios se algum campo de endereço estiver preenchido
+    requiredAddressFields.forEach(([field, message]) => {
+      if (!values.address[field].trim()) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Informe um número válido',
-          path: ['address', 'number']
+          message,
+          path: ['address', field]
         })
       }
+    })
+
+    if (
+      values.address.number.trim() &&
+      !Number.isFinite(Number(values.address.number))
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Informe um número válido',
+        path: ['address', 'number']
+      })
     }
-  })
+  }
+})
 
 export type UserFormValues = z.infer<typeof baseUserFormSchema>
 
@@ -145,7 +138,6 @@ const getDefaultValues = (user?: UserType): UserFormValues => ({
   employmentStatus: user?.employmentStatus ?? 'active',
   statusReason: user?.statusReason ?? '',
   notes: user?.notes ?? '',
-  password: '',
   address: {
     zipCode: user?.address?.zipCode ?? '',
     state: user?.address?.state ?? '',
@@ -177,7 +169,7 @@ export default function UserForm(props: UserFormProps) {
     watch,
     formState: { errors, isSubmitting }
   } = useForm<UserFormValues>({
-    resolver: zodResolver(createUserFormSchema(mode)),
+    resolver: zodResolver(userFormSchema),
     defaultValues: getDefaultValues(initialUser)
   })
 
@@ -272,15 +264,7 @@ export default function UserForm(props: UserFormProps) {
       })
     }
 
-    if (mode === 'create') {
-      await props.onSubmit({ ...payload, password: values.password })
-      return
-    }
-
-    await props.onSubmit({
-      ...payload,
-      ...(values.password.trim() && { password: values.password })
-    })
+    await props.onSubmit(payload)
   }
 
   const sectionClasses =
@@ -474,27 +458,6 @@ export default function UserForm(props: UserFormProps) {
               {...register('notes')}
             />
           </div>
-        </div>
-      </section>
-
-      <section aria-labelledby="access-data-title">
-        <h2 id="access-data-title" className={sectionTitleClasses}>
-          Acesso
-        </h2>
-        <div className={sectionClasses}>
-          <FormField
-            label={mode === 'create' ? 'Senha' : 'Nova senha'}
-            type="password"
-            required={mode === 'create'}
-            autoComplete="new-password"
-            placeholder={
-              mode === 'create'
-                ? 'Defina a senha inicial'
-                : 'Deixe em branco para manter a senha atual'
-            }
-            error={errors.password?.message}
-            {...register('password')}
-          />
         </div>
       </section>
 

@@ -18,6 +18,15 @@ input[type='number']::-webkit-outer-spin-button {
   -webkit-appearance: none;
 }
 
+/* O Chrome e o Edge não tratam o formato de uma data vazia como placeholder. */
+.date-input--empty::-webkit-datetime-edit {
+  color: var(--color-gray-400);
+}
+
+.dark .date-input--empty::-webkit-datetime-edit {
+  color: color-mix(in srgb, var(--color-dark-muted) 70%, transparent);
+}
+
 .dark {
   background: var(--color-dark-background);
 }

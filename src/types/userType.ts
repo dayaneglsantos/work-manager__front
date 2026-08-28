@@ -35,9 +35,7 @@ export interface UserPayload {
   cpf: string
   phoneNumber: string
   birthDate?: string
-  profileImage?: string
   profileId: number
-  supervisorId?: number | null
   departmentId?: number | null
   currentSalary: number
   admissionDate: string
@@ -57,6 +55,33 @@ export interface CreateUserResponse {
   invitationSent: boolean
 }
 
+export interface ProfileImageUploadSignature {
+  apiKey: string
+  cloudName: string
+  signature: string
+  timestamp: number
+  uploadPreset: string
+}
+
+export interface CloudinaryProfileImageUploadResponse {
+  bytes: number
+  format: string
+  public_id: string
+  resource_type: 'image'
+  signature: string
+  version: number
+}
+
+export interface ProfileImageResponse {
+  id: number
+  profileImage: string | null
+}
+
+export interface ProfileImageChange {
+  file: File | null
+  removeCurrentImage: boolean
+}
+
 export interface UserType {
   id: number
   hasPassword: boolean
@@ -74,10 +99,6 @@ export interface UserType {
   notes?: string
   address?: AddressType
   profile: {
-    id: number
-    name: string
-  }
-  supervisor?: {
     id: number
     name: string
   }

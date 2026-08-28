@@ -2,8 +2,17 @@
 
 import Breadcrumb from '@/components/Breadcrumb'
 import UserForm from '@/components/UserForm'
-import { getUserById, updateUser } from '@/services/userServices'
-import { UpdateUserPayload, UserType } from '@/types/userType'
+import {
+  getUserById,
+  removeProfileImage,
+  updateUser,
+  uploadProfileImage
+} from '@/services/userServices'
+import {
+  ProfileImageChange,
+  UpdateUserPayload,
+  UserType
+} from '@/types/userType'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -52,15 +61,35 @@ export default function Page() {
     }
   }, [userId])
 
-  const handleUpdateUser = async (payload: UpdateUserPayload) => {
+  const handleUpdateUser = async (
+    payload: UpdateUserPayload,
+    profileImage: ProfileImageChange
+  ) => {
     try {
       await updateUser(userId, payload)
-      toast.success('Usuário atualizado com sucesso')
-      router.push('/gestao/usuarios')
     } catch (error) {
       console.error(error)
       toast.error('Não foi possível atualizar o usuário')
+      return
     }
+
+    try {
+      if (profileImage.file) {
+        await uploadProfileImage(userId, profileImage.file)
+      } else if (profileImage.removeCurrentImage) {
+        await removeProfileImage(userId)
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error(
+        'Dados atualizados, mas não foi possível alterar a imagem de perfil'
+      )
+      router.push('/gestao/usuarios')
+      return
+    }
+
+    toast.success('Usuário atualizado com sucesso')
+    router.push('/gestao/usuarios')
   }
 
   return (

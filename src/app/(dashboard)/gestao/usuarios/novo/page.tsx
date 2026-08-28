@@ -2,17 +2,26 @@
 
 import Breadcrumb from '@/components/Breadcrumb'
 import UserForm from '@/components/UserForm'
-import { createUser } from '@/services/userServices'
-import { CreateUserPayload } from '@/types/userType'
+import { createUser, uploadProfileImage } from '@/services/userServices'
+import {
+  CreateUserPayload,
+  CreateUserResponse,
+  ProfileImageChange
+} from '@/types/userType'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 
 export default function Page() {
   const router = useRouter()
 
-  const handleCreateUser = async (payload: CreateUserPayload) => {
+  const handleCreateUser = async (
+    payload: CreateUserPayload,
+    profileImage: ProfileImageChange
+  ) => {
+    let user: CreateUserResponse
+
     try {
-      const user = await createUser(payload)
+      user = await createUser(payload)
 
       if (user.invitationSent) {
         toast.success('Usuário cadastrado e convite enviado com sucesso')
@@ -21,12 +30,24 @@ export default function Page() {
           icon: '⚠️'
         })
       }
-
-      router.push('/gestao/usuarios')
     } catch (error) {
       console.error(error)
       toast.error('Não foi possível cadastrar o usuário')
+      return
     }
+
+    if (profileImage.file) {
+      try {
+        await uploadProfileImage(user.id, profileImage.file)
+      } catch (error) {
+        console.error(error)
+        toast.error(
+          'Usuário cadastrado, mas não foi possível enviar a imagem de perfil'
+        )
+      }
+    }
+
+    router.push('/gestao/usuarios')
   }
 
   return (

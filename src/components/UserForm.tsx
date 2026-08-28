@@ -5,10 +5,10 @@ import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { getDepartments } from '@/services/departmentServices'
 import { getProfiles } from '@/services/profileServices'
-import { getUsers } from '@/services/userServices'
 import { isValidCpf, normalizeCpf } from '@/utils/cpf'
 import {
   CreateUserPayload,
+  ProfileImageChange,
   UpdateUserPayload,
   UserPayload,
   UserType
@@ -20,25 +20,22 @@ import CpfField from './CpfField'
 import CurrencyField from './CurrencyField'
 import FormField from './FormField'
 import FormSelectField from './FormSelectField'
+import PhoneField from './PhoneField'
+import ProfileImageField from './ProfileImageField'
 import TextareaField from './TextareaField'
+import ZipCodeField from './ZipCodeField'
 
-const optionalUrl = z
-  .string()
-  .trim()
-  .refine(
-    (value) => !value || z.string().url().safeParse(value).success,
-    'Informe uma URL válida'
-  )
+const onlyDigits = (value: string) => value.replace(/\D/g, '')
 
 const baseUserFormSchema = z.object({
   name: z.string().trim().min(1, 'Informe o nome'),
   email: z.string().trim().email('Informe um e-mail válido'),
   cpf: z.string().refine(isValidCpf, 'Informe um CPF válido'),
-  phoneNumber: z.string().trim().min(1, 'Informe o telefone'),
+  phoneNumber: z
+    .string()
+    .regex(/^\d{10,11}$/, 'Informe um telefone com 10 ou 11 dígitos'),
   birthDate: z.string(),
-  profileImage: optionalUrl,
   profileId: z.number({ invalid_type_error: 'Selecione um perfil' }).min(1),
-  supervisorId: z.number().nullable(),
   departmentId: z.number().nullable(),
   currentSalary: z
     .number({ invalid_type_error: 'Informe o salário atual' })
@@ -94,6 +91,17 @@ const userFormSchema = baseUserFormSchema.superRefine((values, context) => {
     })
 
     if (
+      values.address.zipCode.trim() &&
+      !/^\d{8}$/.test(values.address.zipCode)
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Informe um CEP com 8 dígitos',
+        path: ['address', 'zipCode']
+      })
+    }
+
+    if (
       values.address.number.trim() &&
       !Number.isFinite(Number(values.address.number))
     ) {
@@ -112,12 +120,18 @@ type UserFormProps =
   | {
       mode: 'create'
       initialUser?: never
-      onSubmit: (payload: CreateUserPayload) => Promise<void>
+      onSubmit: (
+        payload: CreateUserPayload,
+        profileImage: ProfileImageChange
+      ) => Promise<void>
     }
   | {
       mode: 'edit'
       initialUser: UserType
-      onSubmit: (payload: UpdateUserPayload) => Promise<void>
+      onSubmit: (
+        payload: UpdateUserPayload,
+        profileImage: ProfileImageChange
+      ) => Promise<void>
     }
 
 const toDateInputValue = (value?: string) => value?.slice(0, 10) ?? ''
@@ -126,11 +140,9 @@ const getDefaultValues = (user?: UserType): UserFormValues => ({
   name: user?.name ?? '',
   email: user?.email ?? '',
   cpf: normalizeCpf(user?.cpf ?? ''),
-  phoneNumber: user?.phoneNumber ?? '',
+  phoneNumber: onlyDigits(user?.phoneNumber ?? ''),
   birthDate: toDateInputValue(user?.birthDate),
-  profileImage: user?.profileImage ?? '',
   profileId: user?.profile.id ?? 0,
-  supervisorId: user?.supervisor?.id ?? null,
   departmentId: user?.department?.id ?? null,
   currentSalary: user?.currentSalary ?? 0,
   admissionDate: toDateInputValue(user?.admissionDate),
@@ -139,7 +151,7 @@ const getDefaultValues = (user?: UserType): UserFormValues => ({
   statusReason: user?.statusReason ?? '',
   notes: user?.notes ?? '',
   address: {
-    zipCode: user?.address?.zipCode ?? '',
+    zipCode: onlyDigits(user?.address?.zipCode ?? ''),
     state: user?.address?.state ?? '',
     city: user?.address?.city ?? '',
     street: user?.address?.street ?? '',
@@ -157,9 +169,10 @@ export default function UserForm(props: UserFormProps) {
   const [profileOptions, setProfileOptions] = useState<
     { label: string; value: number }[]
   >([])
-  const [supervisorOptions, setSupervisorOptions] = useState<
-    { label: string; value: number | '' }[]
-  >([])
+  const [profileImage, setProfileImage] = useState<ProfileImageChange>({
+    file: null,
+    removeCurrentImage: false
+  })
 
   const {
     control,
@@ -174,9 +187,12 @@ export default function UserForm(props: UserFormProps) {
   })
 
   const employmentStatus = watch('employmentStatus')
+  const birthDate = watch('birthDate')
+  const admissionDate = watch('admissionDate')
 
   useEffect(() => {
     reset(getDefaultValues(initialUser))
+    setProfileImage({ file: null, removeCurrentImage: false })
   }, [initialUser, reset])
 
   useEffect(() => {
@@ -184,10 +200,9 @@ export default function UserForm(props: UserFormProps) {
 
     const loadOptions = async () => {
       try {
-        const [departments, profiles, supervisorsResponse] = await Promise.all([
+        const [departments, profiles] = await Promise.all([
           getDepartments(),
-          getProfiles(),
-          getUsers({ page: 1, pageSize: 100, employmentStatus: 'active' })
+          getProfiles()
         ])
 
         if (!isMounted) return
@@ -206,15 +221,6 @@ export default function UserForm(props: UserFormProps) {
             value: profile.id
           }))
         )
-        setSupervisorOptions([
-          { label: 'Sem supervisor', value: '' },
-          ...(supervisorsResponse?.data ?? [])
-            .filter((user) => user.id !== initialUser?.id)
-            .map((user) => ({
-              label: user.name,
-              value: user.id
-            }))
-        ])
       } catch (error) {
         console.error(error)
         toast.error('Erro ao carregar as opções do formulário')
@@ -226,7 +232,7 @@ export default function UserForm(props: UserFormProps) {
     return () => {
       isMounted = false
     }
-  }, [initialUser?.id])
+  }, [])
 
   const submitForm = async (values: UserFormValues) => {
     const hasAddressValues = Object.values(values.address).some((value) =>
@@ -239,9 +245,7 @@ export default function UserForm(props: UserFormProps) {
       cpf: normalizeCpf(values.cpf),
       phoneNumber: values.phoneNumber.trim(),
       birthDate: values.birthDate || undefined,
-      profileImage: values.profileImage.trim() || undefined,
       profileId: values.profileId,
-      supervisorId: values.supervisorId,
       departmentId: values.departmentId,
       currentSalary: values.currentSalary,
       admissionDate: values.admissionDate,
@@ -264,7 +268,7 @@ export default function UserForm(props: UserFormProps) {
       })
     }
 
-    await props.onSubmit(payload)
+    await props.onSubmit(payload, profileImage)
   }
 
   const sectionClasses =
@@ -284,6 +288,12 @@ export default function UserForm(props: UserFormProps) {
         </h2>
         <div className={sectionClasses}>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <ProfileImageField
+              currentImage={initialUser?.profileImage}
+              onChange={(file, removeCurrentImage) =>
+                setProfileImage({ file, removeCurrentImage })
+              }
+            />
             <FormField
               label="Nome"
               required
@@ -314,27 +324,28 @@ export default function UserForm(props: UserFormProps) {
                 />
               )}
             />
-            <FormField
-              label="Telefone"
-              type="tel"
-              required
-              placeholder="(00) 00000-0000"
-              error={errors.phoneNumber?.message}
-              {...register('phoneNumber')}
+            <Controller
+              name="phoneNumber"
+              control={control}
+              render={({ field }) => (
+                <PhoneField
+                  required
+                  name={field.name}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={errors.phoneNumber?.message}
+                />
+              )}
             />
             <FormField
               label="Data de nascimento"
               type="date"
+              inputClassName={
+                birthDate ? undefined : 'date-input--empty'
+              }
               error={errors.birthDate?.message}
               {...register('birthDate')}
-            />
-            <FormField
-              label="Imagem de perfil"
-              type="url"
-              placeholder="https://exemplo.com/imagem.jpg"
-              error={errors.profileImage?.message}
-              className="md:col-span-2"
-              {...register('profileImage')}
             />
           </div>
         </div>
@@ -372,6 +383,9 @@ export default function UserForm(props: UserFormProps) {
               label="Data de admissão"
               type="date"
               required
+              inputClassName={
+                admissionDate ? undefined : 'date-input--empty'
+              }
               error={errors.admissionDate?.message}
               {...register('admissionDate')}
             />
@@ -404,20 +418,6 @@ export default function UserForm(props: UserFormProps) {
                   onChange={(value) => field.onChange(value || null)}
                   placeholder="Selecione um departamento"
                   error={errors.departmentId?.message}
-                />
-              )}
-            />
-            <Controller
-              name="supervisorId"
-              control={control}
-              render={({ field }) => (
-                <FormSelectField
-                  label="Supervisor"
-                  options={supervisorOptions}
-                  value={field.value ?? ''}
-                  onChange={(value) => field.onChange(value || null)}
-                  placeholder="Selecione um supervisor"
-                  error={errors.supervisorId?.message}
                 />
               )}
             />
@@ -467,11 +467,18 @@ export default function UserForm(props: UserFormProps) {
         </h2>
         <div className={sectionClasses}>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField
-              label="CEP"
-              placeholder="00000-000"
-              error={errors.address?.zipCode?.message}
-              {...register('address.zipCode')}
+            <Controller
+              name="address.zipCode"
+              control={control}
+              render={({ field }) => (
+                <ZipCodeField
+                  name={field.name}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={errors.address?.zipCode?.message}
+                />
+              )}
             />
             <FormField
               label="Estado"

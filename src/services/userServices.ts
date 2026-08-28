@@ -1,12 +1,16 @@
 import { api } from '@/utils/axios'
 import {
+  CloudinaryProfileImageUploadResponse,
   CreateUserPayload,
   CreateUserResponse,
   EmploymentStatus,
+  ProfileImageResponse,
+  ProfileImageUploadSignature,
   UpdateUserPayload,
   UserType,
   UsersResponse
 } from '@/types/userType'
+import axios from 'axios'
 import toast from 'react-hot-toast'
 
 interface GetUsersParams {
@@ -71,5 +75,52 @@ export const resendPasswordInvitation = async (
   const { data } = await api.post<{ message: string }>(
     `/users/${id}/password-invitation/resend`
   )
+  return data
+}
+
+export const uploadProfileImage = async (
+  userId: number,
+  file: File
+): Promise<ProfileImageResponse> => {
+  const { data: uploadSignature } =
+    await api.post<ProfileImageUploadSignature>(
+      `/users/${userId}/profile-image/signature`
+    )
+
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('api_key', uploadSignature.apiKey)
+  formData.append('timestamp', String(uploadSignature.timestamp))
+  formData.append('upload_preset', uploadSignature.uploadPreset)
+  formData.append('signature', uploadSignature.signature)
+
+  const { data: uploadedImage } =
+    await axios.post<CloudinaryProfileImageUploadResponse>(
+      `https://api.cloudinary.com/v1_1/${uploadSignature.cloudName}/image/upload`,
+      formData
+    )
+
+  const { data } = await api.put<ProfileImageResponse>(
+    `/users/${userId}/profile-image`,
+    {
+      bytes: uploadedImage.bytes,
+      format: uploadedImage.format,
+      publicId: uploadedImage.public_id,
+      resourceType: uploadedImage.resource_type,
+      signature: uploadedImage.signature,
+      version: uploadedImage.version
+    }
+  )
+
+  return data
+}
+
+export const removeProfileImage = async (
+  userId: number
+): Promise<ProfileImageResponse> => {
+  const { data } = await api.delete<ProfileImageResponse>(
+    `/users/${userId}/profile-image`
+  )
+
   return data
 }

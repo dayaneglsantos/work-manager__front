@@ -44,8 +44,11 @@ describe('Login page', () => {
     login.mockResolvedValue(session)
     render(<Login />)
 
-    await user.type(screen.getByPlaceholderText('E-mail'), 'user@example.com')
-    await user.type(screen.getByPlaceholderText('Senha'), 'secret123')
+    await user.type(
+      screen.getByPlaceholderText('Digite seu e-mail'),
+      'user@example.com'
+    )
+    await user.type(screen.getByPlaceholderText('Digite sua senha'), 'secret123')
     await user.click(screen.getByRole('button', { name: 'Entrar' }))
 
     await waitFor(() =>
@@ -63,8 +66,14 @@ describe('Login page', () => {
     login.mockResolvedValue(undefined)
     render(<Login />)
 
-    await user.type(screen.getByPlaceholderText('E-mail'), 'user@example.com')
-    await user.type(screen.getByPlaceholderText('Senha'), 'wrong-password')
+    await user.type(
+      screen.getByPlaceholderText('Digite seu e-mail'),
+      'user@example.com'
+    )
+    await user.type(
+      screen.getByPlaceholderText('Digite sua senha'),
+      'wrong-password'
+    )
     await user.click(screen.getByRole('button', { name: 'Entrar' }))
 
     await waitFor(() => expect(login).toHaveBeenCalledOnce())

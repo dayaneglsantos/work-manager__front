@@ -25,7 +25,8 @@ const managementOptions = [
   {
     title: 'Permissões',
     description: 'Controle as ações disponíveis em cada área do sistema.',
-    image: permissionsIcon
+    image: permissionsIcon,
+    href: '/gestao/permissoes'
   },
   {
     title: 'Tags',

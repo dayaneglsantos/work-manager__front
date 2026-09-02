@@ -3,25 +3,32 @@
 import Breadcrumb from '@/components/Breadcrumb'
 import UserForm from '@/components/UserForm'
 import {
+  getSelfProfile,
   getUserById,
   removeProfileImage,
+  updateSelfProfile,
   updateUser,
   uploadProfileImage
 } from '@/services/userServices'
 import {
   ProfileImageChange,
+  SelfProfilePayload,
+  SelfProfileType,
   UpdateUserPayload,
   UserType
 } from '@/types/userType'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function Page() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
+  const { session, loading: sessionLoading, saveSession } = useAuth()
   const userId = Number(params.id)
-  const [user, setUser] = useState<UserType | null>(null)
+  const [user, setUser] = useState<UserType | SelfProfileType | null>(null)
+  const [editMode, setEditMode] = useState<'edit' | 'self-edit'>('edit')
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
 
@@ -29,6 +36,8 @@ export default function Page() {
     let isMounted = true
 
     const loadUser = async () => {
+      if (sessionLoading) return
+
       if (!Number.isInteger(userId) || userId <= 0) {
         setHasError(true)
         setIsLoading(false)
@@ -36,10 +45,39 @@ export default function Page() {
       }
 
       try {
-        const data = await getUserById(userId)
+        const canManageUsers = Boolean(
+          session?.permissions.some(
+            (permission) =>
+              permission.name === 'update-users' && permission.hasPermission
+          )
+        )
+        const isEditingSelf = session?.id === userId
+
+        if (!isEditingSelf && !canManageUsers) {
+          throw new Error('User is not allowed to edit another user')
+        }
+
+        let data: UserType | SelfProfileType
+        let mode: 'edit' | 'self-edit'
+
+        if (isEditingSelf) {
+          const selfProfile = await getSelfProfile()
+
+          if (!canManageUsers || selfProfile.isSystemOwner) {
+            data = selfProfile
+            mode = 'self-edit'
+          } else {
+            data = await getUserById(userId)
+            mode = 'edit'
+          }
+        } else {
+          data = await getUserById(userId)
+          mode = 'edit'
+        }
 
         if (isMounted) {
           setUser(data)
+          setEditMode(mode)
         }
       } catch (error) {
         console.error(error)
@@ -59,7 +97,62 @@ export default function Page() {
     return () => {
       isMounted = false
     }
-  }, [userId])
+  }, [session, sessionLoading, userId])
+
+  const applyProfileImage = async (profileImage: ProfileImageChange) => {
+    if (profileImage.file) {
+      return uploadProfileImage(userId, profileImage.file)
+    }
+
+    if (profileImage.removeCurrentImage) {
+      return removeProfileImage(userId)
+    }
+
+    return null
+  }
+
+  const handleUpdateSelf = async (
+    payload: SelfProfilePayload,
+    profileImage: ProfileImageChange
+  ) => {
+    let updatedProfile: SelfProfileType
+
+    try {
+      updatedProfile = await updateSelfProfile(payload)
+    } catch (error) {
+      console.error(error)
+      toast.error('Não foi possível atualizar seus dados')
+      return
+    }
+
+    let updatedAvatar = updatedProfile.profileImage ?? null
+
+    try {
+      const imageResult = await applyProfileImage(profileImage)
+      if (imageResult) updatedAvatar = imageResult.profileImage
+    } catch (error) {
+      console.error(error)
+      toast.error(
+        'Dados atualizados, mas não foi possível alterar a imagem de perfil'
+      )
+      if (session) {
+        saveSession({ ...session, name: updatedProfile.name })
+      }
+      router.push('/')
+      return
+    }
+
+    if (session) {
+      saveSession({
+        ...session,
+        name: updatedProfile.name,
+        profileImage: updatedAvatar
+      })
+    }
+
+    toast.success('Seus dados foram atualizados com sucesso')
+    router.push('/')
+  }
 
   const handleUpdateUser = async (
     payload: UpdateUserPayload,
@@ -74,11 +167,7 @@ export default function Page() {
     }
 
     try {
-      if (profileImage.file) {
-        await uploadProfileImage(userId, profileImage.file)
-      } else if (profileImage.removeCurrentImage) {
-        await removeProfileImage(userId)
-      }
+      await applyProfileImage(profileImage)
     } catch (error) {
       console.error(error)
       toast.error(
@@ -123,10 +212,16 @@ export default function Page() {
         <div className="rounded-2xl border border-error/20 bg-error/5 px-6 py-12 text-center text-sm text-error dark:text-red-300">
           Não foi possível carregar os dados do usuário.
         </div>
+      ) : editMode === 'self-edit' ? (
+        <UserForm
+          mode="self-edit"
+          initialUser={user as SelfProfileType}
+          onSubmit={handleUpdateSelf}
+        />
       ) : (
         <UserForm
           mode="edit"
-          initialUser={user}
+          initialUser={user as UserType}
           onSubmit={handleUpdateUser}
         />
       )}

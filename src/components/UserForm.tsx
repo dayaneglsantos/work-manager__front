@@ -1,7 +1,7 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, Resolver, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { getDepartments } from '@/services/departmentServices'
 import { getProfiles } from '@/services/profileServices'
@@ -9,6 +9,8 @@ import { isValidCpf, normalizeCpf } from '@/utils/cpf'
 import {
   CreateUserPayload,
   ProfileImageChange,
+  SelfProfilePayload,
+  SelfProfileType,
   UpdateUserPayload,
   UserPayload,
   UserType
@@ -55,7 +57,51 @@ const baseUserFormSchema = z.object({
   })
 })
 
-// Redefine o esquema para adicionar validações condicionais
+type AddressFormValues = z.infer<typeof baseUserFormSchema>['address']
+
+const validateAddress = (
+  address: AddressFormValues,
+  context: z.RefinementCtx
+) => {
+  const hasAddressValues = Object.values(address).some((value) => value.trim())
+
+  if (!hasAddressValues) return
+
+  const requiredAddressFields = [
+    ['zipCode', 'Informe o CEP'],
+    ['state', 'Informe o estado'],
+    ['city', 'Informe a cidade'],
+    ['street', 'Informe o logradouro'],
+    ['number', 'Informe o número']
+  ] as const
+
+  requiredAddressFields.forEach(([field, message]) => {
+    if (!address[field].trim()) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message,
+        path: ['address', field]
+      })
+    }
+  })
+
+  if (address.zipCode.trim() && !/^\d{8}$/.test(address.zipCode)) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Informe um CEP com 8 dígitos',
+      path: ['address', 'zipCode']
+    })
+  }
+
+  if (address.number.trim() && !Number.isFinite(Number(address.number))) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Informe um número válido',
+      path: ['address', 'number']
+    })
+  }
+}
+
 const userFormSchema = baseUserFormSchema.superRefine((values, context) => {
   // Validação condicional para o campo "statusReason" que deve ser preenchido se o "employmentStatus" for "inactive"
   if (values.employmentStatus === 'inactive' && !values.statusReason.trim()) {
@@ -66,53 +112,19 @@ const userFormSchema = baseUserFormSchema.superRefine((values, context) => {
     })
   }
 
-  const hasAddressValues = Object.values(values.address).some((value) =>
-    value.trim()
-  )
-
-  if (hasAddressValues) {
-    const requiredAddressFields = [
-      ['zipCode', 'Informe o CEP'],
-      ['state', 'Informe o estado'],
-      ['city', 'Informe a cidade'],
-      ['street', 'Informe o logradouro'],
-      ['number', 'Informe o número']
-    ] as const
-
-    // Valida os campos de endereço obrigatórios se algum campo de endereço estiver preenchido
-    requiredAddressFields.forEach(([field, message]) => {
-      if (!values.address[field].trim()) {
-        context.addIssue({
-          code: z.ZodIssueCode.custom,
-          message,
-          path: ['address', field]
-        })
-      }
-    })
-
-    if (
-      values.address.zipCode.trim() &&
-      !/^\d{8}$/.test(values.address.zipCode)
-    ) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Informe um CEP com 8 dígitos',
-        path: ['address', 'zipCode']
-      })
-    }
-
-    if (
-      values.address.number.trim() &&
-      !Number.isFinite(Number(values.address.number))
-    ) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Informe um número válido',
-        path: ['address', 'number']
-      })
-    }
-  }
+  validateAddress(values.address, context)
 })
+
+const selfProfileFormSchema = baseUserFormSchema
+  .pick({
+    name: true,
+    email: true,
+    cpf: true,
+    phoneNumber: true,
+    birthDate: true,
+    address: true
+  })
+  .superRefine((values, context) => validateAddress(values.address, context))
 
 export type UserFormValues = z.infer<typeof baseUserFormSchema>
 
@@ -126,6 +138,14 @@ type UserFormProps =
       ) => Promise<void>
     }
   | {
+      mode: 'self-edit'
+      initialUser: SelfProfileType
+      onSubmit: (
+        payload: SelfProfilePayload,
+        profileImage: ProfileImageChange
+      ) => Promise<void>
+    }
+  | {
       mode: 'edit'
       initialUser: UserType
       onSubmit: (
@@ -134,35 +154,42 @@ type UserFormProps =
       ) => Promise<void>
     }
 
-const toDateInputValue = (value?: string) => value?.slice(0, 10) ?? ''
+const toDateInputValue = (value?: string | null) => value?.slice(0, 10) ?? ''
 
-const getDefaultValues = (user?: UserType): UserFormValues => ({
-  name: user?.name ?? '',
-  email: user?.email ?? '',
-  cpf: normalizeCpf(user?.cpf ?? ''),
-  phoneNumber: onlyDigits(user?.phoneNumber ?? ''),
-  birthDate: toDateInputValue(user?.birthDate),
-  profileId: user?.profile.id ?? 0,
-  departmentId: user?.department?.id ?? null,
-  currentSalary: user?.currentSalary ?? 0,
-  admissionDate: toDateInputValue(user?.admissionDate),
-  currentPosition: user?.currentPosition ?? '',
-  employmentStatus: user?.employmentStatus ?? 'active',
-  statusReason: user?.statusReason ?? '',
-  notes: user?.notes ?? '',
-  address: {
-    zipCode: onlyDigits(user?.address?.zipCode ?? ''),
-    state: user?.address?.state ?? '',
-    city: user?.address?.city ?? '',
-    street: user?.address?.street ?? '',
-    number: user?.address?.number?.toString() ?? '',
-    complement: user?.address?.complement ?? ''
+const getDefaultValues = (
+  user?: UserType | SelfProfileType
+): UserFormValues => {
+  const managedUser = user && 'employmentStatus' in user ? user : undefined
+
+  return {
+    name: user?.name ?? '',
+    email: user?.email ?? '',
+    cpf: normalizeCpf(user?.cpf ?? ''),
+    phoneNumber: onlyDigits(user?.phoneNumber ?? ''),
+    birthDate: toDateInputValue(user?.birthDate),
+    profileId: user?.profile.id ?? 0,
+    departmentId: managedUser?.department?.id ?? null,
+    currentSalary: managedUser?.currentSalary ?? 0,
+    admissionDate: toDateInputValue(managedUser?.admissionDate),
+    currentPosition: managedUser?.currentPosition ?? '',
+    employmentStatus: managedUser?.employmentStatus ?? 'active',
+    statusReason: managedUser?.statusReason ?? '',
+    notes: managedUser?.notes ?? '',
+    address: {
+      zipCode: onlyDigits(user?.address?.zipCode ?? ''),
+      state: user?.address?.state ?? '',
+      city: user?.address?.city ?? '',
+      street: user?.address?.street ?? '',
+      number: user?.address?.number?.toString() ?? '',
+      complement: user?.address?.complement ?? ''
+    }
   }
-})
+}
 
 export default function UserForm(props: UserFormProps) {
   const { mode } = props
-  const initialUser = props.mode === 'edit' ? props.initialUser : undefined
+  const initialUser = props.mode === 'create' ? undefined : props.initialUser
+  const isSelfEdit = mode === 'self-edit'
   const [departmentOptions, setDepartmentOptions] = useState<
     { label: string; value: number }[]
   >([])
@@ -182,7 +209,9 @@ export default function UserForm(props: UserFormProps) {
     watch,
     formState: { errors, isSubmitting }
   } = useForm<UserFormValues>({
-    resolver: zodResolver(userFormSchema),
+    resolver: zodResolver(
+      isSelfEdit ? selfProfileFormSchema : userFormSchema
+    ) as unknown as Resolver<UserFormValues>,
     defaultValues: getDefaultValues(initialUser)
   })
 
@@ -199,6 +228,8 @@ export default function UserForm(props: UserFormProps) {
     let isMounted = true
 
     const loadOptions = async () => {
+      if (isSelfEdit) return
+
       try {
         const [departments, profiles] = await Promise.all([
           getDepartments(),
@@ -232,12 +263,36 @@ export default function UserForm(props: UserFormProps) {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [isSelfEdit])
 
   const submitForm = async (values: UserFormValues) => {
     const hasAddressValues = Object.values(values.address).some((value) =>
       value.trim()
     )
+
+    const address = hasAddressValues
+      ? {
+          zipCode: values.address.zipCode.trim(),
+          state: values.address.state.trim(),
+          city: values.address.city.trim(),
+          street: values.address.street.trim(),
+          number: Number(values.address.number),
+          complement: values.address.complement.trim() || null
+        }
+      : null
+
+    if (props.mode === 'self-edit') {
+      await props.onSubmit(
+        {
+          name: values.name.trim(),
+          phoneNumber: values.phoneNumber.trim(),
+          birthDate: values.birthDate || null,
+          address
+        },
+        profileImage
+      )
+      return
+    }
 
     const payload: UserPayload = {
       name: values.name.trim(),
@@ -256,16 +311,7 @@ export default function UserForm(props: UserFormProps) {
           ? values.statusReason.trim()
           : null,
       notes: values.notes.trim() || undefined,
-      ...(hasAddressValues && {
-        address: {
-          zipCode: values.address.zipCode.trim(),
-          state: values.address.state.trim(),
-          city: values.address.city.trim(),
-          street: values.address.street.trim(),
-          number: Number(values.address.number),
-          complement: values.address.complement.trim() || null
-        }
-      })
+      ...(address && { address })
     }
 
     await props.onSubmit(payload, profileImage)
@@ -308,6 +354,10 @@ export default function UserForm(props: UserFormProps) {
               autoComplete="off"
               placeholder="nome@empresa.com"
               error={errors.email?.message}
+              disabled={isSelfEdit}
+              inputClassName={
+                isSelfEdit ? 'cursor-not-allowed opacity-70' : undefined
+              }
               {...register('email')}
             />
             <Controller
@@ -321,6 +371,7 @@ export default function UserForm(props: UserFormProps) {
                   onChange={field.onChange}
                   onBlur={field.onBlur}
                   error={errors.cpf?.message}
+                  disabled={isSelfEdit}
                 />
               )}
             />
@@ -341,9 +392,7 @@ export default function UserForm(props: UserFormProps) {
             <FormField
               label="Data de nascimento"
               type="date"
-              inputClassName={
-                birthDate ? undefined : 'date-input--empty'
-              }
+              inputClassName={birthDate ? undefined : 'date-input--empty'}
               error={errors.birthDate?.message}
               {...register('birthDate')}
             />
@@ -351,115 +400,115 @@ export default function UserForm(props: UserFormProps) {
         </div>
       </section>
 
-      <section aria-labelledby="professional-data-title">
-        <h2 id="professional-data-title" className={sectionTitleClasses}>
-          Dados profissionais
-        </h2>
-        <div className={sectionClasses}>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField
-              label="Cargo"
-              required
-              placeholder="Cargo atual"
-              error={errors.currentPosition?.message}
-              {...register('currentPosition')}
-            />
-            <Controller
-              name="currentSalary"
-              control={control}
-              render={({ field }) => (
-                <CurrencyField
-                  label="Salário atual"
-                  required
-                  name={field.name}
-                  value={field.value}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  error={errors.currentSalary?.message}
-                />
-              )}
-            />
-            <FormField
-              label="Data de admissão"
-              type="date"
-              required
-              inputClassName={
-                admissionDate ? undefined : 'date-input--empty'
-              }
-              error={errors.admissionDate?.message}
-              {...register('admissionDate')}
-            />
-            <Controller
-              name="profileId"
-              control={control}
-              render={({ field }) => (
-                <FormSelectField
-                  label="Perfil"
-                  required
-                  options={profileOptions}
-                  value={field.value}
-                  onChange={(value) => field.onChange(value)}
-                  placeholder="Selecione um perfil"
-                  error={errors.profileId?.message}
-                />
-              )}
-            />
-            <Controller
-              name="departmentId"
-              control={control}
-              render={({ field }) => (
-                <FormSelectField
-                  label="Departamento"
-                  options={[
-                    { label: 'Sem departamento', value: '' },
-                    ...departmentOptions
-                  ]}
-                  value={field.value ?? ''}
-                  onChange={(value) => field.onChange(value || null)}
-                  placeholder="Selecione um departamento"
-                  error={errors.departmentId?.message}
-                />
-              )}
-            />
-            <Controller
-              name="employmentStatus"
-              control={control}
-              render={({ field }) => (
-                <FormSelectField
-                  label="Situação do vínculo"
-                  required
-                  options={[
-                    { label: 'Ativo', value: 'active' },
-                    { label: 'Inativo', value: 'inactive' },
-                    { label: 'Desligado', value: 'terminated' },
-                    { label: 'Demissionário', value: 'resigned' }
-                  ]}
-                  value={field.value}
-                  onChange={(value) => field.onChange(value)}
-                  error={errors.employmentStatus?.message}
-                />
-              )}
-            />
-            {employmentStatus === 'inactive' && (
-              <TextareaField
-                label="Motivo da inativação"
+      {!isSelfEdit && (
+        <section aria-labelledby="professional-data-title">
+          <h2 id="professional-data-title" className={sectionTitleClasses}>
+            Dados profissionais
+          </h2>
+          <div className={sectionClasses}>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <FormField
+                label="Cargo"
                 required
-                placeholder="Informe o motivo"
-                error={errors.statusReason?.message}
-                className="md:col-span-2"
-                {...register('statusReason')}
+                placeholder="Cargo atual"
+                error={errors.currentPosition?.message}
+                {...register('currentPosition')}
               />
-            )}
-            <TextareaField
-              label="Observações"
-              placeholder="Informações adicionais"
-              error={errors.notes?.message}
-              className="md:col-span-2"
-              {...register('notes')}
-            />
+              <Controller
+                name="currentSalary"
+                control={control}
+                render={({ field }) => (
+                  <CurrencyField
+                    label="Salário atual"
+                    required
+                    name={field.name}
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    error={errors.currentSalary?.message}
+                  />
+                )}
+              />
+              <FormField
+                label="Data de admissão"
+                type="date"
+                required
+                inputClassName={admissionDate ? undefined : 'date-input--empty'}
+                error={errors.admissionDate?.message}
+                {...register('admissionDate')}
+              />
+              <Controller
+                name="profileId"
+                control={control}
+                render={({ field }) => (
+                  <FormSelectField
+                    label="Perfil"
+                    required
+                    options={profileOptions}
+                    value={field.value}
+                    onChange={(value) => field.onChange(value)}
+                    placeholder="Selecione um perfil"
+                    error={errors.profileId?.message}
+                  />
+                )}
+              />
+              <Controller
+                name="departmentId"
+                control={control}
+                render={({ field }) => (
+                  <FormSelectField
+                    label="Departamento"
+                    options={[
+                      { label: 'Sem departamento', value: '' },
+                      ...departmentOptions
+                    ]}
+                    value={field.value ?? ''}
+                    onChange={(value) => field.onChange(value || null)}
+                    placeholder="Selecione um departamento"
+                    error={errors.departmentId?.message}
+                  />
+                )}
+              />
+              <Controller
+                name="employmentStatus"
+                control={control}
+                render={({ field }) => (
+                  <FormSelectField
+                    label="Situação do vínculo"
+                    required
+                    options={[
+                      { label: 'Ativo', value: 'active' },
+                      { label: 'Inativo', value: 'inactive' },
+                      { label: 'Desligado', value: 'terminated' },
+                      { label: 'Demissionário', value: 'resigned' }
+                    ]}
+                    value={field.value}
+                    onChange={(value) => field.onChange(value)}
+                    error={errors.employmentStatus?.message}
+                  />
+                )}
+              />
+              {employmentStatus === 'inactive' && (
+                <TextareaField
+                  label="Motivo da inativação"
+                  required
+                  placeholder="Informe o motivo"
+                  error={errors.statusReason?.message}
+                  className="md:col-span-2"
+                  {...register('statusReason')}
+                />
+              )}
+              <TextareaField
+                label="Observações"
+                placeholder="Informações adicionais"
+                error={errors.notes?.message}
+                className="md:col-span-2"
+                {...register('notes')}
+              />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section aria-labelledby="address-title">
         <h2 id="address-title" className={sectionTitleClasses}>
@@ -517,7 +566,7 @@ export default function UserForm(props: UserFormProps) {
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <Button
           title="Cancelar"
-          href="/gestao/usuarios"
+          href={isSelfEdit ? '/' : '/gestao/usuarios'}
           variant="outline"
           className="w-full sm:w-auto"
         />

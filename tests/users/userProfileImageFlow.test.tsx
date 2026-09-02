@@ -7,9 +7,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const serviceMock = vi.hoisted(() => ({
   createUser: vi.fn(),
+  getSelfProfile: vi.fn(),
   getUserById: vi.fn(),
   removeProfileImage: vi.fn(),
   updateUser: vi.fn(),
+  updateSelfProfile: vi.fn(),
   uploadProfileImage: vi.fn()
 }))
 const navigationMock = vi.hoisted(() => ({
@@ -23,6 +25,20 @@ const toastMock = vi.hoisted(() =>
 )
 
 vi.mock('@/services/userServices', () => serviceMock)
+
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({
+    session: {
+      id: 999,
+      name: 'Administrador',
+      profileImage: null,
+      profile: { id: 1, name: 'Administrador' },
+      permissions: [{ name: 'update-users', hasPermission: true }]
+    },
+    loading: false,
+    saveSession: vi.fn()
+  })
+}))
 
 vi.mock('next/navigation', () => ({
   useParams: () => ({ id: '10' }),
@@ -42,7 +58,7 @@ vi.mock('@/components/UserForm', () => ({
     mode,
     onSubmit
   }: {
-    mode: 'create' | 'edit'
+    mode: 'create' | 'edit' | 'self-edit'
     onSubmit: (
       payload: Record<string, unknown>,
       profileImage: { file: File | null; removeCurrentImage: boolean }

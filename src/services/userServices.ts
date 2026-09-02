@@ -6,6 +6,8 @@ import {
   EmploymentStatus,
   ProfileImageResponse,
   ProfileImageUploadSignature,
+  SelfProfilePayload,
+  SelfProfileType,
   UpdateUserPayload,
   UserType,
   UsersResponse
@@ -69,6 +71,18 @@ export const updateUser = async (
   return data
 }
 
+export const getSelfProfile = async (): Promise<SelfProfileType> => {
+  const { data } = await api.get<SelfProfileType>('/users/me')
+  return data
+}
+
+export const updateSelfProfile = async (
+  payload: SelfProfilePayload
+): Promise<SelfProfileType> => {
+  const { data } = await api.patch<SelfProfileType>('/users/me', payload)
+  return data
+}
+
 export const resendPasswordInvitation = async (
   id: number
 ): Promise<{ message: string }> => {
@@ -82,10 +96,9 @@ export const uploadProfileImage = async (
   userId: number,
   file: File
 ): Promise<ProfileImageResponse> => {
-  const { data: uploadSignature } =
-    await api.post<ProfileImageUploadSignature>(
-      `/users/${userId}/profile-image/signature`
-    )
+  const { data: uploadSignature } = await api.post<ProfileImageUploadSignature>(
+    `/users/${userId}/profile-image/signature`
+  )
 
   const formData = new FormData()
   formData.append('file', file)

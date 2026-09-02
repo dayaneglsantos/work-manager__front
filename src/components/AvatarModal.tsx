@@ -4,6 +4,7 @@ import { ChangeEvent, useEffect, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCamera, faTrash, faXmark } from '@fortawesome/free-solid-svg-icons'
 import Avatar from './Avatar'
+import { ProfileImageChange } from '@/types/userType'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024
 const ACCEPTED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -12,7 +13,7 @@ interface AvatarModalProps {
   open: boolean
   currentAvatar: string | null
   onClose: () => void
-  onApply: (avatar: string | null) => void
+  onApply: (change: ProfileImageChange) => Promise<void>
 }
 
 export default function AvatarModal({
@@ -23,12 +24,17 @@ export default function AvatarModal({
 }: AvatarModalProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [preview, setPreview] = useState<string | null>(currentAvatar)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [removeCurrentImage, setRemoveCurrentImage] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     if (!open) return
 
     setPreview(currentAvatar)
+    setSelectedFile(null)
+    setRemoveCurrentImage(false)
     setError(null)
 
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -61,6 +67,8 @@ export default function AvatarModal({
     const reader = new FileReader()
     reader.onload = () => {
       setPreview(reader.result as string)
+      setSelectedFile(file)
+      setRemoveCurrentImage(false)
       setError(null)
     }
     reader.readAsDataURL(file)
@@ -68,14 +76,30 @@ export default function AvatarModal({
 
   const removeImage = () => {
     setPreview(null)
+    setSelectedFile(null)
+    setRemoveCurrentImage(Boolean(currentAvatar))
     setError(null)
 
     if (inputRef.current) inputRef.current.value = ''
   }
 
-  const applyAvatar = () => {
-    onApply(preview)
-    onClose()
+  const applyAvatar = async () => {
+    if (!selectedFile && !removeCurrentImage) {
+      onClose()
+      return
+    }
+
+    setIsSaving(true)
+    setError(null)
+
+    try {
+      await onApply({ file: selectedFile, removeCurrentImage })
+      onClose()
+    } catch {
+      setError('Não foi possível alterar o avatar. Tente novamente.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -107,6 +131,7 @@ export default function AvatarModal({
             type="button"
             aria-label="Fechar"
             onClick={onClose}
+            disabled={isSaving}
             className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-gray-500 transition-colors hover:bg-gray-100 hover:text-primary-dark focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none dark:text-dark-muted dark:hover:bg-dark-surface-hover dark:hover:text-dark-text"
           >
             <FontAwesomeIcon icon={faXmark} className="h-4 w-4" />
@@ -129,6 +154,7 @@ export default function AvatarModal({
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
+            disabled={isSaving}
             className="mt-5 flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none dark:focus-visible:ring-offset-dark-surface"
           >
             <FontAwesomeIcon icon={faCamera} className="h-4 w-4" />
@@ -149,6 +175,7 @@ export default function AvatarModal({
             <button
               type="button"
               onClick={removeImage}
+              disabled={isSaving}
               className="mt-4 flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-error transition-colors hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-error focus-visible:outline-none dark:hover:bg-error/10"
             >
               <FontAwesomeIcon icon={faTrash} className="h-3.5 w-3.5" />
@@ -161,6 +188,7 @@ export default function AvatarModal({
           <button
             type="button"
             onClick={onClose}
+            disabled={isSaving}
             className="cursor-pointer rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none dark:text-dark-muted dark:hover:bg-dark-surface-hover"
           >
             Cancelar
@@ -168,16 +196,12 @@ export default function AvatarModal({
           <button
             type="button"
             onClick={applyAvatar}
+            disabled={isSaving}
             className="cursor-pointer rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none dark:focus-visible:ring-offset-dark-surface"
           >
-            Aplicar avatar
+            {isSaving ? 'Salvando...' : 'Aplicar avatar'}
           </button>
         </div>
-
-        <p className="mt-4 text-center text-[11px] text-gray-400 dark:text-dark-muted">
-          Nesta etapa, a alteração será mantida somente até a página ser
-          recarregada.
-        </p>
       </section>
     </div>
   )

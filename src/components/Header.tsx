@@ -1,28 +1,68 @@
 'use client'
-import { useState } from 'react'
-import { faBell } from '@fortawesome/free-solid-svg-icons'
+import { useEffect, useRef, useState } from 'react'
+import { faBell, faCamera, faPen } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import Link from 'next/link'
+import toast from 'react-hot-toast'
 import NotificationsModal from './NotificationsModal'
 import ThemeToggle from './ToggleTheme'
 import Avatar from './Avatar'
 import AvatarModal from './AvatarModal'
-import { getSession } from '@/utils/getSession'
+import { useAuth } from '@/contexts/AuthContext'
+import { removeProfileImage, uploadProfileImage } from '@/services/userServices'
+import { ProfileImageChange } from '@/types/userType'
 
 export default function Header() {
   const [open, setOpen] = useState(false)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [avatarModalOpen, setAvatarModalOpen] = useState(false)
   const [unreadNotifications, setUnreadNotifications] = useState(2)
-  const user = getSession()
-  const [avatar, setAvatar] = useState<string | null>(user?.profileImage ?? null)
+  const profileMenuRef = useRef<HTMLDivElement>(null)
+  const { session: user, saveSession } = useAuth()
+
+  useEffect(() => {
+    if (!profileMenuOpen) return
+
+    const closeMenu = (event: MouseEvent) => {
+      if (!profileMenuRef.current?.contains(event.target as Node)) {
+        setProfileMenuOpen(false)
+      }
+    }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setProfileMenuOpen(false)
+    }
+
+    document.addEventListener('mousedown', closeMenu)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('mousedown', closeMenu)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [profileMenuOpen])
+
+  const applyAvatar = async (change: ProfileImageChange) => {
+    if (!user) throw new Error('Session not found')
+
+    try {
+      const result = change.file
+        ? await uploadProfileImage(user.id, change.file)
+        : await removeProfileImage(user.id)
+
+      saveSession({ ...user, profileImage: result.profileImage })
+      toast.success('Avatar atualizado com sucesso')
+    } catch (error) {
+      console.error(error)
+      toast.error('Não foi possível alterar o avatar')
+      throw error
+    }
+  }
 
   const currentDate = new Date()
-  const formattedDate = format(
-    currentDate,
-    "EEEE, dd 'de' MMMM 'de' yyyy",
-    { locale: ptBR }
-  )
+  const formattedDate = format(currentDate, "EEEE, dd 'de' MMMM 'de' yyyy", {
+    locale: ptBR
+  })
 
   const greeting = (
     <div className="min-w-0">
@@ -67,15 +107,54 @@ export default function Header() {
               )}
             </button>
 
-            <button
-              type="button"
-              aria-label="Alterar avatar"
-              title="Alterar avatar"
-              onClick={() => setAvatarModalOpen(true)}
-              className="cursor-pointer rounded-full ring-2 ring-transparent transition-all hover:ring-primary/30 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none dark:hover:ring-primary-light/30 dark:focus-visible:ring-offset-dark-background"
-            >
-              <Avatar src={avatar} />
-            </button>
+            <div ref={profileMenuRef} className="relative">
+              <button
+                type="button"
+                aria-label="Abrir opções do perfil"
+                aria-haspopup="menu"
+                aria-expanded={profileMenuOpen}
+                title="Opções do perfil"
+                onClick={() => setProfileMenuOpen((current) => !current)}
+                className="cursor-pointer rounded-full ring-2 ring-transparent transition-all hover:ring-primary/30 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none dark:hover:ring-primary-light/30 dark:focus-visible:ring-offset-dark-background"
+              >
+                <Avatar src={user?.profileImage ?? null} />
+              </button>
+
+              {profileMenuOpen && user && (
+                <div
+                  role="menu"
+                  className="absolute top-full right-0 z-40 mt-2 w-48 overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl shadow-primary-dark/10 dark:border-dark-border dark:bg-dark-surface dark:shadow-black/30"
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setProfileMenuOpen(false)
+                      setAvatarModalOpen(true)
+                    }}
+                    className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-primary-dark transition-colors hover:bg-purple-50 dark:text-dark-text dark:hover:bg-dark-surface-hover"
+                  >
+                    <FontAwesomeIcon
+                      icon={faCamera}
+                      className="h-4 w-4 text-primary"
+                    />
+                    Alterar avatar
+                  </button>
+                  <Link
+                    href={`/gestao/usuarios/${user.id}/editar`}
+                    role="menuitem"
+                    onClick={() => setProfileMenuOpen(false)}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-primary-dark transition-colors hover:bg-purple-50 dark:text-dark-text dark:hover:bg-dark-surface-hover"
+                  >
+                    <FontAwesomeIcon
+                      icon={faPen}
+                      className="h-4 w-4 text-primary"
+                    />
+                    Editar dados
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -88,9 +167,9 @@ export default function Header() {
       />
       <AvatarModal
         open={avatarModalOpen}
-        currentAvatar={avatar}
+        currentAvatar={user?.profileImage ?? null}
         onClose={() => setAvatarModalOpen(false)}
-        onApply={setAvatar}
+        onApply={applyAvatar}
       />
     </>
   )

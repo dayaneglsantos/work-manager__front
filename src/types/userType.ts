@@ -46,6 +46,30 @@ export type CreateUserPayload = UserPayload
 
 export type UpdateUserPayload = Partial<UserPayload>
 
+export interface SelfProfilePayload {
+  name: string
+  phoneNumber: string
+  birthDate: string | null
+  address: AddressType | null
+}
+
+export interface SelfProfileType {
+  id: number
+  name: string
+  email: string
+  cpf: string
+  phoneNumber?: string
+  birthDate?: string | null
+  profileImage?: string | null
+  address?: AddressType | null
+  profile: {
+    id: number
+    name: string
+    fullAccess: boolean
+  }
+  isSystemOwner: boolean
+}
+
 export interface CreateUserResponse {
   id: number
   invitationSent: boolean

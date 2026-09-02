@@ -12,7 +12,10 @@ describe('PermissionEditor', () => {
 
     server.use(
       http.get('http://localhost:3000/profiles', () =>
-        HttpResponse.json([{ id: 1, name: 'Administradores' }])
+        HttpResponse.json([
+          { id: 99, name: 'Admin', fullAccess: true },
+          { id: 1, name: 'Administradores', fullAccess: false }
+        ])
       ),
       http.get('http://localhost:3000/profiles/1/permissions', () =>
         HttpResponse.json({
@@ -56,6 +59,7 @@ describe('PermissionEditor', () => {
     expect(screen.queryByText('Perfil selecionado')).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('combobox'))
+    expect(screen.queryByText('Admin')).not.toBeInTheDocument()
     await user.click(screen.getByText('Administradores'))
 
     expect(await screen.findByText('Perfil selecionado')).toBeInTheDocument()

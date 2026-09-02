@@ -1,10 +1,6 @@
 import { DepartmentType } from './departmentType'
 
-export type EmploymentStatus =
-  | 'active'
-  | 'inactive'
-  | 'terminated'
-  | 'resigned'
+export type EmploymentStatus = 'active' | 'inactive' | 'terminated' | 'resigned'
 
 export interface UsersMetaType {
   page: number
@@ -85,6 +81,7 @@ export interface ProfileImageChange {
 export interface UserType {
   id: number
   hasPassword: boolean
+  isSystemOwner?: boolean
   name: string
   email: string
   cpf?: string
@@ -101,6 +98,7 @@ export interface UserType {
   profile: {
     id: number
     name: string
+    fullAccess: boolean
   }
   department?: DepartmentType | null
 }

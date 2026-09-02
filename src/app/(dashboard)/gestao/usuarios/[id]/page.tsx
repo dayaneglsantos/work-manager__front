@@ -96,7 +96,13 @@ export default function Page() {
   }, [userId])
 
   const handleResendInvitation = async () => {
-    if (!user || user.hasPassword || isResendingInvitation) return
+    if (
+      !user ||
+      user.hasPassword ||
+      user.employmentStatus !== 'active' ||
+      isResendingInvitation
+    )
+      return
 
     setIsResendingInvitation(true)
     const toastId = toast.loading('Reenviando convite...')
@@ -161,7 +167,7 @@ function UserActions({
 }) {
   return (
     <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
-      {!user.hasPassword && (
+      {!user.hasPassword && user.employmentStatus === 'active' && (
         <Button
           title={isResendingInvitation ? 'Reenviando...' : 'Reenviar convite'}
           icon={faEnvelope}
@@ -172,20 +178,24 @@ function UserActions({
           size="sm"
         />
       )}
-      <Button
-        title="Editar dados"
-        icon={faPen}
-        href={`/gestao/usuarios/${user.id}/editar`}
-        className="min-w-0 flex-1 whitespace-nowrap sm:flex-none"
-        size="sm"
-      />
-      <Button
-        title="Editar permissões"
-        icon={faShieldHalved}
-        href={`/gestao/usuarios/${user.id}/permissoes`}
-        className="min-w-0 flex-1 whitespace-nowrap sm:flex-none"
-        size="sm"
-      />
+      {!user.isSystemOwner && (
+        <Button
+          title="Editar dados"
+          icon={faPen}
+          href={`/gestao/usuarios/${user.id}/editar`}
+          className="min-w-0 flex-1 whitespace-nowrap sm:flex-none"
+          size="sm"
+        />
+      )}
+      {!user.isSystemOwner && !user.profile.fullAccess && (
+        <Button
+          title="Editar permissões"
+          icon={faShieldHalved}
+          href={`/gestao/usuarios/${user.id}/permissoes`}
+          className="min-w-0 flex-1 whitespace-nowrap sm:flex-none"
+          size="sm"
+        />
+      )}
     </div>
   )
 }
@@ -214,7 +224,7 @@ function UserDetails({ user }: { user: UserType }) {
               name={user.department?.name ?? 'Sem departamento'}
               variant={user.department ? 'info' : 'default'}
             />
-            {!user.hasPassword && (
+            {!user.hasPassword && user.employmentStatus === 'active' && (
               <Badge name="Convite pendente" variant="warning" />
             )}
           </div>
@@ -233,7 +243,13 @@ function UserDetails({ user }: { user: UserType }) {
           />
           <Detail
             label="Acesso"
-            value={user.hasPassword ? 'Senha criada' : 'Convite pendente'}
+            value={
+              user.hasPassword
+                ? 'Senha criada'
+                : user.employmentStatus === 'active'
+                  ? 'Convite pendente'
+                  : 'Acesso indisponível'
+            }
           />
 
           <div className="col-span-full mt-2 border-t border-gray-100 pt-4 dark:border-dark-border">

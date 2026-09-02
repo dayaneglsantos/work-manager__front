@@ -12,6 +12,7 @@ vi.mock('next/navigation', () => ({
 const userResponse = {
   id: 7,
   hasPassword: false,
+  isSystemOwner: false,
   name: 'Maria Silva',
   email: 'maria@work-manager.local',
   cpf: '52998224725',
@@ -22,7 +23,7 @@ const userResponse = {
   currentPosition: 'Analista',
   employmentStatus: 'active',
   notes: 'Usuária de teste',
-  profile: { id: 2, name: 'Colaborador' },
+  profile: { id: 2, name: 'Colaborador', fullAccess: false },
   department: { id: 3, name: 'Operações' },
   address: {
     zipCode: '01310100',
@@ -67,9 +68,10 @@ describe('User details page', () => {
     expect(
       screen.getByRole('link', { name: 'Editar permissões' })
     ).toHaveAttribute('href', '/gestao/usuarios/7/permissoes')
-    expect(
-      screen.getByRole('link', { name: 'Editar usuário' })
-    ).toHaveAttribute('href', '/gestao/usuarios/7/editar')
+    expect(screen.getByRole('link', { name: 'Editar dados' })).toHaveAttribute(
+      'href',
+      '/gestao/usuarios/7/editar'
+    )
 
     await user.click(screen.getByRole('button', { name: 'Reenviar convite' }))
     await waitFor(() => expect(resendRequest).toHaveBeenCalledOnce())
@@ -91,5 +93,63 @@ describe('User details page', () => {
       screen.queryByRole('button', { name: 'Reenviar convite' })
     ).not.toBeInTheDocument()
     expect(screen.getByText('Senha criada')).toBeInTheDocument()
+  })
+
+  it('does not show resend when the user is inactive', async () => {
+    server.use(
+      http.get('http://localhost:3000/users/7', () =>
+        HttpResponse.json({ ...userResponse, employmentStatus: 'inactive' })
+      )
+    )
+
+    render(<Page />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Maria Silva' })
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Reenviar convite' })
+    ).not.toBeInTheDocument()
+    expect(screen.getByText('Acesso indisponível')).toBeInTheDocument()
+  })
+
+  it('does not offer permission editing for full-access profiles', async () => {
+    server.use(
+      http.get('http://localhost:3000/users/7', () =>
+        HttpResponse.json({
+          ...userResponse,
+          profile: { ...userResponse.profile, fullAccess: true }
+        })
+      )
+    )
+
+    render(<Page />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Maria Silva' })
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: 'Editar permissões' })
+    ).not.toBeInTheDocument()
+  })
+
+  it('does not offer administrative editing actions for the system owner', async () => {
+    server.use(
+      http.get('http://localhost:3000/users/7', () =>
+        HttpResponse.json({ ...userResponse, isSystemOwner: true })
+      )
+    )
+
+    render(<Page />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Maria Silva' })
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: 'Editar dados' })
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: 'Editar permissões' })
+    ).not.toBeInTheDocument()
   })
 })

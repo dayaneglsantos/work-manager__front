@@ -75,7 +75,9 @@ export default function PermissionEditor(props: PermissionEditorProps) {
     setIsLoadingProfiles(true)
     setHasProfilesError(false)
     try {
-      setProfiles(await getProfiles())
+      setProfiles(
+        (await getProfiles()).filter((profile) => !profile.fullAccess)
+      )
     } catch (error) {
       console.error(error)
       setHasProfilesError(true)

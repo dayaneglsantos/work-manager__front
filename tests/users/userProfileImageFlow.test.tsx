@@ -90,7 +90,7 @@ const existingUser: UserType = {
   email: 'usuario@work-manager.local',
   employmentStatus: 'active',
   profileImage: 'https://example.com/current-avatar.webp',
-  profile: { id: 1, name: 'Funcionário' },
+  profile: { id: 1, name: 'Funcionário', fullAccess: false },
   department: null
 }
 
@@ -113,7 +113,9 @@ describe('profile image flow on user pages', () => {
     const user = userEvent.setup()
     render(<CreateUserPage />)
 
-    await user.click(screen.getByRole('button', { name: 'Cadastrar com imagem' }))
+    await user.click(
+      screen.getByRole('button', { name: 'Cadastrar com imagem' })
+    )
 
     await waitFor(() =>
       expect(serviceMock.uploadProfileImage).toHaveBeenCalledWith(
@@ -134,7 +136,9 @@ describe('profile image flow on user pages', () => {
     )
     render(<CreateUserPage />)
 
-    await user.click(screen.getByRole('button', { name: 'Cadastrar com imagem' }))
+    await user.click(
+      screen.getByRole('button', { name: 'Cadastrar com imagem' })
+    )
 
     await waitFor(() =>
       expect(toastMock.error).toHaveBeenCalledWith(

@@ -102,7 +102,7 @@ export default function UserCard({ user }: UserCardProps) {
               href: `/gestao/usuarios/${user.id}/editar`,
               icon: faPen
             },
-            ...(!user.hasPassword
+            ...(!user.hasPassword && user.employmentStatus === 'active'
               ? [
                   {
                     label: isResendingInvitation

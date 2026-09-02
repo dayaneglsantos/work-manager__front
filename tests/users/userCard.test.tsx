@@ -31,7 +31,8 @@ const buildUser = (hasPassword: boolean): UserType => ({
   currentPosition: 'Desenvolvedor',
   profile: {
     id: 1,
-    name: 'Funcionário'
+    name: 'Funcionário',
+    fullAccess: false
   },
   department: null
 })

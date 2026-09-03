@@ -20,7 +20,8 @@ const managementOptions = [
   {
     title: 'Perfis',
     description: 'Defina funções e níveis de acesso para cada perfil.',
-    image: profilesIcon
+    image: profilesIcon,
+    href: '/gestao/perfis'
   },
   {
     title: 'Permissões',

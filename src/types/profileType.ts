@@ -3,3 +3,7 @@ export interface ProfileType {
   name: string
   fullAccess: boolean
 }
+
+export interface ProfileListItem extends ProfileType {
+  userCount: number
+}

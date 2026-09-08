@@ -9,7 +9,8 @@ const managementOptions = [
   {
     title: 'Departamentos',
     description: 'Organize departamentos, equipes e seus responsáveis.',
-    image: departmentsIcon
+    image: departmentsIcon,
+    href: '/gestao/departamentos'
   },
   {
     title: 'Usuários',

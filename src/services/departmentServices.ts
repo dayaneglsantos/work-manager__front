@@ -1,7 +1,7 @@
 import { api } from '@/utils/axios'
 import toast from 'react-hot-toast'
 import { DepartmentDetails, DepartmentType } from '@/types/departmentType'
-import { UsersResponse } from '@/types/userType'
+import { UserOptionsResponse } from '@/types/userType'
 
 // A listagem administrativa trata erros na própria página. O serviço legado
 // permanece disponível para os formulários de usuários que já o consomem.
@@ -26,12 +26,20 @@ export const updateDepartment = async (
   return data
 }
 
+export const createDepartment = async (payload: {
+  name: string
+  managerId: number
+}) => {
+  const { data } = await api.post<DepartmentType>('/departments', payload)
+  return data
+}
+
 export const deleteDepartment = async (id: number) => {
   await api.delete(`/departments/${id}`)
 }
 
 export const listDepartmentManagers = async (search: string, page: number) => {
-  const { data } = await api.get<UsersResponse>('/users', {
+  const { data } = await api.get<UserOptionsResponse>('/users/options', {
     params: { employmentStatus: 'active', search, page, pageSize: 20 }
   })
   return data

@@ -16,6 +16,18 @@ export interface UsersResponse {
   meta: UsersMetaType
 }
 
+export interface UserOption {
+  id: number
+  name: string
+  profileImage: string | null
+  employmentStatus: EmploymentStatus
+}
+
+export interface UserOptionsResponse {
+  data: UserOption[]
+  meta: UsersMetaType
+}
+
 export interface AddressType {
   zipCode: string
   state: string

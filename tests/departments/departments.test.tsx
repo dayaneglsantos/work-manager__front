@@ -1,5 +1,11 @@
 import Page from '@/app/(dashboard)/gestao/departamentos/page'
-import { render, screen, within, waitFor } from '@testing-library/react'
+import {
+  fireEvent,
+  render,
+  screen,
+  within,
+  waitFor
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -60,6 +66,21 @@ describe('Departamentos', () => {
     expect(screen.getByText('Gerente não ativo')).toBeInTheDocument()
     expect(screen.getByText('3 usuários vinculados')).toBeInTheDocument()
   })
+  it('fecha a modal ao clicar no backdrop e mantém aberta ao clicar no conteúdo', async () => {
+    const user = userEvent.setup()
+    render(<Page />)
+    await user.click(
+      await screen.findByRole('button', { name: 'Opções de Operações' })
+    )
+    await user.click(screen.getByRole('menuitem', { name: 'Editar' }))
+    const dialog = await screen.findByRole('dialog')
+    fireEvent.click(
+      within(dialog).getByRole('heading', { name: 'Editar departamento' })
+    )
+    expect(dialog).toBeInTheDocument()
+    fireEvent.click(dialog)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
   it('confirma a exclusão com integrantes e atualiza a lista', async () => {
     const user = userEvent.setup()
     let removed = false
@@ -115,11 +136,10 @@ describe('Departamentos', () => {
     )
   })
   it('busca gerentes ativos e permite substituir o gerente', async () => {
-    auth.session.permissions.push({ name: 'read-users', hasPermission: true })
     const user = userEvent.setup()
     let payload: unknown
     server.use(
-      http.get(`${api}/users`, ({ request }) => {
+      http.get(`${api}/users/options`, ({ request }) => {
         expect(new URL(request.url).searchParams.get('employmentStatus')).toBe(
           'active'
         )
@@ -145,15 +165,100 @@ describe('Departamentos', () => {
       await screen.findByRole('button', { name: 'Opções de Operações' })
     )
     await user.click(screen.getByRole('menuitem', { name: 'Editar' }))
-    await screen.findByRole('option', { name: 'Bruno' })
-    await user.selectOptions(
-      screen.getByRole('combobox', { name: 'Gerente' }),
-      '5'
+    await user.type(
+      await screen.findByRole('combobox', { name: 'Buscar novo gerente' }),
+      'Bru'
     )
+    await screen.findByRole('option', { name: 'Bruno' })
+    await user.keyboard('{ArrowDown}{Enter}')
     await user.click(screen.getByRole('button', { name: 'Salvar alterações' }))
     await waitFor(() =>
       expect(payload).toEqual({ name: 'Operações', managerId: 5 })
     )
+  })
+  it('cadastra após 3 caracteres e carrega mais gerentes ao final do scroll', async () => {
+    auth.session.permissions.push({
+      name: 'create-departments',
+      hasPermission: true
+    })
+    const user = userEvent.setup()
+    const searches: Array<{ search: string | null; page: string | null }> = []
+    let payload: unknown
+    server.use(
+      http.get(`${api}/users/options`, ({ request }) => {
+        const params = new URL(request.url).searchParams
+        searches.push({
+          search: params.get('search'),
+          page: params.get('page')
+        })
+        const page = params.get('page')
+        return HttpResponse.json({
+          data:
+            page === '1'
+              ? [
+                  {
+                    id: 5,
+                    name: 'Bruno',
+                    employmentStatus: 'active',
+                    profileImage: null
+                  }
+                ]
+              : [
+                  {
+                    id: 6,
+                    name: 'Bruna',
+                    employmentStatus: 'active',
+                    profileImage: null
+                  }
+                ],
+          meta: { hasNextPage: page === '1' }
+        })
+      }),
+      http.post(`${api}/departments`, async ({ request }) => {
+        payload = await request.json()
+        return HttpResponse.json(
+          { id: 2, name: 'Suporte', managerId: 6 },
+          { status: 201 }
+        )
+      })
+    )
+
+    render(<Page />)
+    await user.click(
+      await screen.findByRole('button', { name: 'Cadastrar departamento' })
+    )
+    await user.type(
+      screen.getByRole('textbox', { name: 'Nome do departamento' }),
+      'Suporte'
+    )
+    const search = screen.getByRole('combobox', { name: 'Gerente' })
+    await user.type(search, 'Br')
+    await new Promise((resolve) => setTimeout(resolve, 350))
+    expect(searches).toEqual([])
+    await user.type(search, 'u')
+    await screen.findByRole('option', { name: 'Bruno' })
+
+    const list = screen.getByRole('listbox', { name: 'Resultados de gerente' })
+    Object.defineProperties(list, {
+      scrollHeight: { configurable: true, value: 200 },
+      clientHeight: { configurable: true, value: 100 },
+      scrollTop: { configurable: true, value: 100, writable: true }
+    })
+    fireEvent.scroll(list)
+    await user.click(await screen.findByRole('option', { name: 'Bruna' }))
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', {
+        name: 'Cadastrar departamento'
+      })
+    )
+
+    await waitFor(() =>
+      expect(payload).toEqual({ name: 'Suporte', managerId: 6 })
+    )
+    expect(searches).toEqual([
+      { search: 'Bru', page: '1' },
+      { search: 'Bru', page: '2' }
+    ])
   })
   it('oculta ações sem permissão e impede consulta sem leitura', async () => {
     auth.session.permissions = [

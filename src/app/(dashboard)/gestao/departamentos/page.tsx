@@ -19,6 +19,7 @@ export default function DepartmentsPage() {
     session?.permissions.some((p) => p.name === name && p.hasPermission) ??
     false
   const canRead = allowed('read-departments')
+  const canCreate = allowed('create-departments')
   const canEdit = allowed('update-departments')
   const canDelete = allowed('delete-departments')
   const [departments, setDepartments] = useState<DepartmentDetails[]>([])
@@ -26,8 +27,8 @@ export default function DepartmentsPage() {
   const [error, setError] = useState('')
   const [revision, setRevision] = useState(0)
   const [modal, setModal] = useState<{
-    id: number
-    mode: 'edit' | 'delete'
+    id?: number
+    mode: 'create' | 'edit' | 'delete'
   } | null>(null)
 
   useEffect(() => {
@@ -63,15 +64,24 @@ export default function DepartmentsPage() {
           { label: 'Departamentos' }
         ]}
       />
-      <div>
-        <h1 className="text-2xl font-bold text-primary-dark dark:text-dark-text">
-          Departamentos
-        </h1>
-        <p className="mt-2 text-sm text-gray-500 dark:text-dark-muted">
-          Consulte os departamentos, seus gerentes e a quantidade de
-          integrantes.
-        </p>
-      </div>
+      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <h1 className="text-2xl font-bold text-primary-dark dark:text-dark-text">
+            Departamentos
+          </h1>
+          <p className="mt-2 text-sm text-gray-500 dark:text-dark-muted">
+            Consulte os departamentos, seus gerentes e a quantidade de
+            integrantes.
+          </p>
+        </div>
+        {!loading && canRead && canCreate && (
+          <Button
+            title="Cadastrar departamento"
+            onClick={() => setModal({ mode: 'create' })}
+            className="w-full shrink-0 sm:w-auto"
+          />
+        )}
+      </header>
       {loading || (canRead && pending) ? (
         <p role="status">Carregando departamentos...</p>
       ) : !canRead ? (
@@ -145,12 +155,12 @@ export default function DepartmentsPage() {
       )}
       {canRead &&
         modal &&
-        ((modal.mode === 'edit' && canEdit) ||
+        ((modal.mode === 'create' && canCreate) ||
+          (modal.mode === 'edit' && canEdit) ||
           (modal.mode === 'delete' && canDelete)) && (
           <DepartmentModal
             key={`${modal.id}-${modal.mode}`}
             {...modal}
-            canReadUsers={allowed('read-users')}
             onClose={() => setModal(null)}
             onSaved={() => {
               setModal(null)
